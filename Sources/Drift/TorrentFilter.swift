@@ -23,6 +23,16 @@ enum TorrentFilter: String, CaseIterable, Identifiable {
         }
     }
 
+    /// macOS Golden Gate restored colored sidebar icons (Mail, Reminders); each filter gets its own tint.
+    var tint: Color {
+        switch self {
+        case .all: .secondary
+        case .downloading: .blue
+        case .seeding: .green
+        case .paused: .orange
+        }
+    }
+
     func matches(_ status: Torrent.Status) -> Bool {
         switch self {
         case .all: true

@@ -1,6 +1,18 @@
 import SwiftUI
 import UniformTypeIdentifiers
 
+extension View {
+    /// Liquid Glass (macOS 26+) on a shape, falling back to a plain fill on earlier systems.
+    @ViewBuilder
+    func adaptiveGlass<S: Shape, F: ShapeStyle>(in shape: S, fallback: F) -> some View {
+        if #available(macOS 26.0, *) {
+            self.glassEffect(.regular, in: shape)
+        } else {
+            self.background(fallback, in: shape)
+        }
+    }
+}
+
 struct ContentView: View {
     var store: TorrentStore
     @State private var pendingDelete: [Torrent] = []
@@ -11,34 +23,25 @@ struct ContentView: View {
         store.selectedIDs.contains(torrent.id) ? store.selectedTorrents : [torrent]
     }
 
+    /// Drives the crossfade between connecting/offline/empty/list states.
+    private enum ContentState: Equatable { case connecting, offline, noResults, empty, list }
+    private var contentState: ContentState {
+        if store.isConnecting { .connecting }
+        else if !store.isConnected { .offline }
+        else if store.visibleTorrents.isEmpty && !store.search.isEmpty { .noResults }
+        else if store.visibleTorrents.isEmpty { .empty }
+        else { .list }
+    }
+
     var body: some View {
         NavigationSplitView {
             Sidebar(store: store)
         } detail: {
             VStack(spacing: 0) {
-                HStack {
-                    Text(store.filter.title).font(.largeTitle.bold())
-                    if store.selectedIDs.count > 1 { Text("\(store.selectedIDs.count) selected").font(.callout).foregroundStyle(.secondary).padding(.leading, 4) }
-                    Spacer()
-                    if !store.isConnected { SettingsLink { Label("Connect", systemImage: "bolt.horizontal.circle").frame(height: 16) }.buttonStyle(.borderedProminent) }
-                    if let session = store.session { SlowModeButton(session: session, store: store, showPopover: $showSlowModePopover) }
-                    Button { Task { await store.refresh() } } label: { Image(systemName: "arrow.clockwise").frame(width: 16, height: 16) }.buttonStyle(.bordered)
-                    Button { store.showAddSheet = true } label: { Label("Add Torrent", systemImage: "plus").frame(height: 16) }.buttonStyle(.borderedProminent).disabled(!store.isConnected)
-                    if !store.selectedIDs.isEmpty {
-                        Button { Task { await store.toggle(store.selectedTorrents) } } label: { Image(systemName: store.selectionIsPaused ? "play.fill" : "pause.fill").frame(width: 16, height: 16) }.buttonStyle(.bordered)
-                        Button(role: .destructive) { pendingDelete = store.selectedTorrents } label: { Image(systemName: "trash").frame(width: 16, height: 16) }.buttonStyle(.bordered)
-                    }
-                    if store.selectedIDs.count == 1, let id = store.selectedIDs.first {
-                        Button {
-                            if store.inspectorTorrentID == id { store.closeInspector() } else { store.openInspector(for: id) }
-                        } label: { Image(systemName: "info.circle").frame(width: 16, height: 16) }.buttonStyle(.bordered)
-                    }
-                }
-                .padding(.horizontal, 24).padding(.vertical, 18)
-                if store.isConnecting { ProgressView("Connecting to Transmission…").frame(maxWidth: .infinity, maxHeight: .infinity) }
-                else if !store.isConnected { OfflineView(store: store) }
-                else if store.visibleTorrents.isEmpty && !store.search.isEmpty { NoSearchResultsView(query: store.search) }
-                else if store.visibleTorrents.isEmpty { EmptyTorrentsView { store.showAddSheet = true } }
+                if store.isConnecting { ProgressView("Connecting to Transmission…").frame(maxWidth: .infinity, maxHeight: .infinity).transition(.opacity) }
+                else if !store.isConnected { OfflineView(store: store).transition(.opacity) }
+                else if store.visibleTorrents.isEmpty && !store.search.isEmpty { NoSearchResultsView(query: store.search).transition(.opacity) }
+                else if store.visibleTorrents.isEmpty { EmptyTorrentsView { store.showAddSheet = true }.transition(.opacity) }
                 else {
                     List(selection: Bindable(store).selectedIDs) {
                         ForEach(store.visibleTorrents) { torrent in
@@ -60,8 +63,11 @@ struct ContentView: View {
                         guard store.inspectorTorrentID != nil, let onlyID = newValue.count == 1 ? newValue.first : nil else { return }
                         store.openInspector(for: onlyID)
                     }
+                    .transition(.opacity)
                 }
             }
+            .animation(.easeInOut(duration: 0.2), value: contentState)
+            .navigationTitle(store.filter.title)
             .searchable(text: Bindable(store).search, placement: .toolbar, prompt: "Search torrents")
             .sheet(isPresented: Bindable(store).showAddSheet) {
                 AddTorrentView(onAddMagnet: { magnet in Task { await store.add(magnet) } }, onAddFile: { data in Task { await store.addTorrentFile(data: data) } })
@@ -71,6 +77,32 @@ struct ContentView: View {
                 guard !torrentFiles.isEmpty else { return false }
                 for url in torrentFiles { if let data = try? Data(contentsOf: url) { Task { await store.addTorrentFile(data: data) } } }
                 return true
+            }
+            .toolbar {
+                if store.selectedIDs.count > 1 {
+                    ToolbarItem(placement: .navigation) {
+                        Text("\(store.selectedIDs.count) selected").foregroundStyle(.secondary)
+                    }
+                }
+                ToolbarItemGroup(placement: .primaryAction) {
+                    if !store.isConnected {
+                        SettingsLink { Label("Connect", systemImage: "bolt.horizontal.circle") }
+                    }
+                    if let session = store.session {
+                        SlowModeButton(session: session, store: store, showPopover: $showSlowModePopover)
+                    }
+                    Button { Task { await store.refresh() } } label: { Image(systemName: "arrow.clockwise") }
+                    if !store.selectedIDs.isEmpty {
+                        Button { Task { await store.toggle(store.selectedTorrents) } } label: { Image(systemName: store.selectionIsPaused ? "play.fill" : "pause.fill") }
+                        Button(role: .destructive) { pendingDelete = store.selectedTorrents } label: { Image(systemName: "trash") }
+                    }
+                    if store.selectedIDs.count == 1, let id = store.selectedIDs.first {
+                        Button {
+                            if store.inspectorTorrentID == id { store.closeInspector() } else { store.openInspector(for: id) }
+                        } label: { Image(systemName: "info.circle") }
+                    }
+                    Button { store.showAddSheet = true } label: { Label("Add Torrent", systemImage: "plus") }.disabled(!store.isConnected)
+                }
             }
         }
         .navigationSplitViewStyle(.balanced)
@@ -140,7 +172,7 @@ struct Sidebar: View {
             ForEach(TorrentFilter.allCases) { filter in
                 Button { store.filter = filter } label: {
                     HStack(spacing: 10) {
-                        Image(systemName: filter.systemImage).frame(width: 16, alignment: .center)
+                        Image(systemName: filter.systemImage).frame(width: 16, alignment: .center).foregroundStyle(filter.tint)
                         Text(filter.title)
                         Spacer()
                         let count = store.count(for: filter)
@@ -149,7 +181,7 @@ struct Sidebar: View {
                                 .font(.caption.monospacedDigit())
                                 .foregroundStyle(.secondary)
                                 .padding(.horizontal, 6).padding(.vertical, 1)
-                                .background(.quaternary.opacity(0.5), in: Capsule())
+                                .adaptiveGlass(in: Capsule(), fallback: .quaternary.opacity(0.5))
                         }
                     }
                     .padding(.vertical, 5)
@@ -319,7 +351,7 @@ struct TorrentRowDetailed: View {
                     .font(.system(size: 13, weight: .medium, design: .rounded)).monospacedDigit()
                     .foregroundStyle(.secondary)
                     .padding(.horizontal, 9).padding(.vertical, 5)
-                    .background(.quaternary.opacity(0.4), in: Capsule())
+                    .adaptiveGlass(in: Capsule(), fallback: .quaternary.opacity(0.4))
             }
         }
         .padding(.vertical, 4)
@@ -382,7 +414,7 @@ struct TorrentRowCard: View {
             Text(Torrent.percentText(animatedProgress)).font(.title3.monospacedDigit().weight(.medium)).foregroundStyle(.secondary)
         }
         .padding(14)
-        .background(.quaternary.opacity(0.25), in: RoundedRectangle(cornerRadius: 14))
+        .adaptiveGlass(in: RoundedRectangle(cornerRadius: 14), fallback: .quaternary.opacity(0.25))
         .padding(.vertical, 4)
         .onAppear { animatedProgress = torrent.progress }
         .onChange(of: torrent.progress) { _, newValue in withAnimation(.easeInOut(duration: 0.6)) { animatedProgress = newValue } }
@@ -524,5 +556,5 @@ struct ServerEditor: View {
     }
 }
 struct LabeledField: View { let title: LocalizedStringKey; @Binding var text: String; let placeholder: LocalizedStringKey; var body: some View { VStack(alignment: .leading, spacing: 6) { Text(title).font(.caption).foregroundStyle(.secondary); TextField(placeholder, text: $text).textFieldStyle(.roundedBorder) } } }
-struct ConnectionGuide: View { var body: some View { VStack(alignment: .leading, spacing: 8) { Text("Quick setup").font(.headline); Text("In Transmission, open Settings → Remote and enable remote access. Use the server IP and RPC port above.").font(.caption).foregroundStyle(.secondary); Link("Read the RPC guide ↗", destination: URL(string: "https://github.com/transmission/transmission/blob/main/docs/rpc-spec.md")!).font(.caption) }.padding(14).background(.quaternary.opacity(0.5), in: RoundedRectangle(cornerRadius: 12)) } }
+struct ConnectionGuide: View { var body: some View { VStack(alignment: .leading, spacing: 8) { Text("Quick setup").font(.headline); Text("In Transmission, open Settings → Remote and enable remote access. Use the server IP and RPC port above.").font(.caption).foregroundStyle(.secondary); Link("Read the RPC guide ↗", destination: URL(string: "https://github.com/transmission/transmission/blob/main/docs/rpc-spec.md")!).font(.caption) }.padding(14).adaptiveGlass(in: RoundedRectangle(cornerRadius: 12), fallback: .quaternary.opacity(0.5)) } }
 
