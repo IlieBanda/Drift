@@ -85,7 +85,7 @@ struct ContentView: View {
                     }
                 }
                 ToolbarItemGroup(placement: .primaryAction) {
-                    if !store.isConnected {
+                    if !store.isConnected && !store.isConnecting {
                         SettingsLink { Label("Connect", systemImage: "bolt.horizontal.circle") }
                     }
                     if let session = store.session {
