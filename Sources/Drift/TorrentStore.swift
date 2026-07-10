@@ -13,6 +13,7 @@ final class TorrentStore {
     var isConnecting = false
     var errorMessage: String?
     var session: SessionSettings?
+    var freeSpace: Int64?
     var inspectorTorrentID: Int?
     var inspectorDetail: TorrentDetail?
     private let client = TransmissionClient()
@@ -30,18 +31,21 @@ final class TorrentStore {
     func startPolling() {
         pollTask?.cancel()
         pollTask = Task { [weak self] in
+            var tick = 0
             while !Task.isCancelled {
                 try? await Task.sleep(for: .seconds(2))
                 guard !Task.isCancelled, let self, self.isConnected else { continue }
                 await self.refresh(silently: true)
                 if self.inspectorTorrentID != nil { await self.loadInspectorDetail() }
+                tick += 1
+                if tick % 10 == 0 { await self.loadSession() }
             }
         }
     }
     func stopPolling() { pollTask?.cancel(); pollTask = nil }
     func loadSavedConnection() { let defaults = UserDefaults.standard; let previous = UserDefaults(suiteName: "ru.iliebanda.Drift"); if let data = defaults.data(forKey: "serverProfiles"), let saved = try? JSONDecoder().decode([ServerProfile].self, from: data), !saved.isEmpty { servers = saved } else if let data = previous?.data(forKey: "serverProfiles"), let saved = try? JSONDecoder().decode([ServerProfile].self, from: data), !saved.isEmpty { servers = saved; persistServers() } else if let legacyHost = previous?.string(forKey: "rpcHost") ?? defaults.string(forKey: "rpcHost"), !legacyHost.isEmpty { servers = [ServerProfile(name: "Transmission", host: legacyHost, port: previous?.string(forKey: "rpcPort") ?? defaults.string(forKey: "rpcPort") ?? "9091", username: previous?.string(forKey: "rpcUsername") ?? defaults.string(forKey: "rpcUsername") ?? "")] ; persistServers() } else { servers = [ServerProfile(name: String(localized: "Local Transmission"), host: "localhost")] }; selectedServerID = UUID(uuidString: defaults.string(forKey: "selectedServerID") ?? "") ?? servers.first?.id; if let selected = selectedServer { apply(selected) } }
     var selectedServer: ServerProfile? { servers.first { $0.id == selectedServerID } }
-    func selectServer(_ id: UUID) { selectedServerID = id; UserDefaults.standard.set(id.uuidString, forKey: "selectedServerID"); if let server = selectedServer { apply(server); Task { await refresh() } } }
+    func selectServer(_ id: UUID) { selectedServerID = id; UserDefaults.standard.set(id.uuidString, forKey: "selectedServerID"); session = nil; freeSpace = nil; if let server = selectedServer { apply(server); Task { await refresh() } } }
     func addServer() { let server = ServerProfile(name: String(localized: "New Server"), host: "192.168.1.100"); servers.append(server); selectedServerID = server.id; persistServers(); apply(server); isConnected = false }
     func deleteServer(_ id: UUID) { guard servers.count > 1 else { return }; servers.removeAll { $0.id == id }; selectedServerID = servers.first?.id; if let selectedServerID { UserDefaults.standard.set(selectedServerID.uuidString, forKey: "selectedServerID") }; persistServers(); if let selectedServer { apply(selectedServer); Task { await refresh() } } }
     func updateServer(_ server: ServerProfile) { guard let index = servers.firstIndex(where: { $0.id == server.id }) else { return }; servers[index] = server; persistServers(); if server.id == selectedServerID { apply(server) } }
@@ -83,7 +87,10 @@ final class TorrentStore {
             UNUserNotificationCenter.current().add(UNNotificationRequest(identifier: UUID().uuidString, content: content, trigger: nil))
         }
     }
-    func loadSession() async { session = try? await client.getSession() }
+    func loadSession() async {
+        session = try? await client.getSession()
+        if let downloadDir = session?.downloadDir { freeSpace = try? await client.getFreeSpace(path: downloadDir) }
+    }
     func updateSpeedLimits(downEnabled: Bool, down: Int, upEnabled: Bool, up: Int) async {
         do {
             try await client.setSession(["speed-limit-down-enabled": downEnabled, "speed-limit-down": down, "speed-limit-up-enabled": upEnabled, "speed-limit-up": up])

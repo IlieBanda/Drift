@@ -5,6 +5,8 @@ struct RPCResponse: RPCEnvelope { let arguments: TorrentArguments?; let result: 
 struct TorrentArguments: Decodable { let torrents: [RemoteTorrent]? }
 struct RemoteTorrent: Decodable { let id: Int; let name: String; let status: Int; let percentDone: Double; let rateDownload: Int; let rateUpload: Int; let totalSize: Int64; let eta: Int; let uploadedEver: Int64; let downloadedEver: Int64; let uploadRatio: Double; let peersConnected: Int; let peersSendingToUs: Int; let peersGettingFromUs: Int }
 struct SessionGetResponse: RPCEnvelope { let arguments: SessionSettings; let result: String }
+struct FreeSpaceResponse: RPCEnvelope { let arguments: FreeSpaceArguments; let result: String }
+struct FreeSpaceArguments: Decodable { let sizeBytes: Int64; enum CodingKeys: String, CodingKey { case sizeBytes = "size-bytes" } }
 struct TorrentDetailResponse: RPCEnvelope { let arguments: TorrentDetailArguments; let result: String }
 struct TorrentDetailArguments: Decodable { let torrents: [RemoteTorrentDetail] }
 
@@ -93,6 +95,11 @@ final class TransmissionClient {
     }
 
     func setSession(_ arguments: [String: Any]) async throws { _ = try await request(method: "session-set", arguments: arguments) as RPCResponse }
+
+    func getFreeSpace(path: String) async throws -> Int64 {
+        let response: FreeSpaceResponse = try await request(method: "free-space", arguments: ["path": path])
+        return response.arguments.sizeBytes
+    }
 
     func getTorrentDetail(id: Int) async throws -> RemoteTorrentDetail? {
         let fields = ["id", "name", "hashString", "comment", "isPrivate", "addedDate", "doneDate", "totalSize", "sizeWhenDone", "downloadedEver", "uploadedEver", "corruptEver", "uploadRatio", "errorString", "rateDownload", "rateUpload", "peersConnected", "trackerStats", "peers", "files", "fileStats"]

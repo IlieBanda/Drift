@@ -23,6 +23,7 @@
 "Connected" = "Подключено";
 "Not connected" = "Нет подключения";
 "Add a server" = "Добавьте сервер";
+"free" = "свободно";
 "Manage servers" = "Управление серверами";
 
 /* Filters */

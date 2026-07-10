@@ -132,12 +132,11 @@ struct SlowModePopover: View {
 
 struct Sidebar: View {
     var store: TorrentStore
+    static let freeSpaceFormatter: ByteCountFormatter = { let f = ByteCountFormatter(); f.countStyle = .file; return f }()
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            HStack { Image(systemName: "arrow.down.circle.fill").font(.title2).foregroundStyle(.blue); Text(verbatim: "Drift").font(.title2.bold()); Spacer(); Circle().fill(store.isConnected ? .green : .orange).frame(width: 8) }.padding(20)
-            Text("SERVER").font(.caption2.monospaced().bold()).foregroundStyle(.secondary).padding(.horizontal, 20).padding(.top, 8)
-            Picker("Server", selection: Binding(get: { store.selectedServerID }, set: { if let id = $0 { store.selectServer(id) } })) { ForEach(store.servers) { server in Text(server.name).tag(Optional(server.id)) } }.labelsHidden().padding(.horizontal, 16).padding(.vertical, 7)
-            Text("TRANSMISSION").font(.caption2.monospaced().bold()).foregroundStyle(.secondary).padding(.horizontal, 20).padding(.top, 12)
+            HStack { Image(systemName: "arrow.down.circle.fill").font(.title2).foregroundStyle(.blue); Text(verbatim: "Drift").font(.title2.bold()); Spacer() }.padding(20)
+            Text("TRANSMISSION").font(.caption2.monospaced().bold()).foregroundStyle(.secondary).padding(.horizontal, 20).padding(.top, 8)
             ForEach(TorrentFilter.allCases) { filter in
                 Button { store.filter = filter } label: {
                     HStack(spacing: 10) {
@@ -153,7 +152,42 @@ struct Sidebar: View {
                 .padding(.horizontal, 20)
             }
             Spacer()
-            HStack { Image(systemName: "server.rack"); VStack(alignment: .leading) { Text(store.isConnected ? "Connected" : "Not connected").font(.callout); if let host = store.selectedServer?.host { Text(host).font(.caption).foregroundStyle(.secondary).lineLimit(1).truncationMode(.middle) } else { Text("Add a server").font(.caption).foregroundStyle(.secondary) } }; Spacer(); SettingsLink { Image(systemName: "gearshape") }.buttonStyle(.plain).help("Manage servers") }.padding(20).background(.quaternary.opacity(0.35))
+            Divider()
+            VStack(alignment: .leading, spacing: 8) {
+                HStack(spacing: 8) {
+                    Circle().fill(store.isConnected ? .green : .orange).frame(width: 6)
+                    Menu {
+                        ForEach(store.servers) { server in
+                            Button { store.selectServer(server.id) } label: {
+                                if server.id == store.selectedServerID { Label(server.name, systemImage: "checkmark") } else { Text(server.name) }
+                            }
+                        }
+                    } label: {
+                        Text(store.selectedServer?.name ?? String(localized: "Add a server"))
+                            .font(.callout.weight(.medium))
+                            .lineLimit(1)
+                            .truncationMode(.tail)
+                    }
+                    .menuStyle(.borderlessButton)
+                    .fixedSize(horizontal: false, vertical: true)
+                    Spacer(minLength: 8)
+                    SettingsLink { Image(systemName: "gearshape") }.buttonStyle(.plain).foregroundStyle(.secondary).help("Manage servers")
+                }
+                if let host = store.selectedServer?.host {
+                    Text(host)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                        .truncationMode(.middle)
+                    if store.isConnected, let freeSpace = store.freeSpace {
+                        Text("\(Self.freeSpaceFormatter.string(fromByteCount: freeSpace)) \(String(localized: "free"))")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .lineLimit(1)
+                    }
+                }
+            }
+            .padding(.horizontal, 20).padding(.vertical, 16)
         }.frame(minWidth: 220)
     }
 }

@@ -23,6 +23,7 @@
 "Connected" = "Connected";
 "Not connected" = "Not connected";
 "Add a server" = "Add a server";
+"free" = "free";
 "Manage servers" = "Manage servers";
 
 /* Filters */
