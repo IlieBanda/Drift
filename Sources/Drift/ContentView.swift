@@ -101,7 +101,7 @@ struct ContentView: View {
                             if store.inspectorTorrentID == id { store.closeInspector() } else { store.openInspector(for: id) }
                         } label: { Image(systemName: "info.circle") }
                     }
-                    Button { store.showAddSheet = true } label: { Label("Add Torrent", systemImage: "plus") }.disabled(!store.isConnected)
+                    Button { store.showAddSheet = true } label: { Image(systemName: "plus") }.help("Add Torrent").disabled(!store.isConnected)
                 }
             }
         }
