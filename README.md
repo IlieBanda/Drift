@@ -14,12 +14,21 @@
 
 Most existing Transmission remotes for Mac — Transmission Remote GUI, Electorrent, the stock web UI — are cross-platform or Electron-based. Drift is built for macOS specifically: SwiftUI, native controls, no Chromium tab hiding in your Dock.
 
+<p align="center">
+  <img src="docs/screenshot-main.png" alt="Drift's torrent list" width="700">
+</p>
+<p align="center">
+  <img src="docs/screenshot-inspector.png" alt="Drift's torrent inspector" width="345">
+  <img src="docs/screenshot-add-torrent.png" alt="Adding a torrent in Drift" width="345">
+</p>
+
 ## Features
 
 **Torrent management**
 - Real-time updates, multi-select (shift/cmd-click), drag-and-drop `.torrent` files
 - Add via magnet link, `.torrent` file, or URL — set as the default handler for both
 - Per-file priority (Low/Normal/High) and inclusion toggles in a torrent inspector (Activity, Trackers, Peers, Files, General)
+- Ask the tracker for more peers, verify local data, reorder the download queue, rename a torrent, move its data to a new location, and copy its magnet link — all from the right-click menu
 
 **Speed control**
 - Global up/down speed limits
