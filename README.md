@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="docs/wordmark.png" alt="Drift" height="72">
+<img src="docs/wordmark-v2.png" alt="Drift" height="72">
 
 **A native macOS remote for Transmission.**
 
