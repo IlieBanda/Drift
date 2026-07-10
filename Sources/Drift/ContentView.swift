@@ -92,15 +92,20 @@ struct ContentView: View {
                         SlowModeButton(session: session, store: store, showPopover: $showSlowModePopover)
                     }
                     Button { Task { await store.refresh() } } label: { Image(systemName: "arrow.clockwise") }
-                    if !store.selectedIDs.isEmpty {
-                        Button { Task { await store.toggle(store.selectedTorrents) } } label: { Image(systemName: store.selectionIsPaused ? "play.fill" : "pause.fill") }
-                        Button(role: .destructive) { pendingDelete = store.selectedTorrents } label: { Image(systemName: "trash") }
+                    HStack(spacing: 16) {
+                        if !store.selectedIDs.isEmpty {
+                            Button { Task { await store.toggle(store.selectedTorrents) } } label: { Image(systemName: store.selectionIsPaused ? "play.fill" : "pause.fill") }
+                            Button(role: .destructive) { pendingDelete = store.selectedTorrents } label: { Image(systemName: "trash") }
+                                .transition(.opacity.combined(with: .scale(scale: 0.7)))
+                        }
+                        if store.selectedIDs.count == 1, let id = store.selectedIDs.first {
+                            Button {
+                                if store.inspectorTorrentID == id { store.closeInspector() } else { store.openInspector(for: id) }
+                            } label: { Image(systemName: "info.circle") }
+                            .transition(.opacity.combined(with: .scale(scale: 0.7)))
+                        }
                     }
-                    if store.selectedIDs.count == 1, let id = store.selectedIDs.first {
-                        Button {
-                            if store.inspectorTorrentID == id { store.closeInspector() } else { store.openInspector(for: id) }
-                        } label: { Image(systemName: "info.circle") }
-                    }
+                    .animation(.easeInOut(duration: 0.2), value: store.selectedIDs)
                     Button { store.showAddSheet = true } label: { Label("Add Torrent", systemImage: "plus") }.disabled(!store.isConnected)
                 }
             }
