@@ -49,6 +49,12 @@ No Xcode project — this is a plain SwiftPM executable, packaged into a `.app` 
 ./script/build_and_run.sh run
 ```
 
+To build a distributable, universal (Apple Silicon + Intel) release DMG instead:
+
+```bash
+./script/build_and_run.sh dmg
+```
+
 ## Installing a downloaded build
 
 Drift isn't notarized yet (that requires a paid Apple Developer account), so on first launch Gatekeeper will say the app "cannot be opened because it is from an unidentified developer" or "is damaged and can't be opened." It isn't — macOS just hasn't seen the ad-hoc signature before. To open it:
