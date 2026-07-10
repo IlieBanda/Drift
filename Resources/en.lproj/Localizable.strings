@@ -24,6 +24,7 @@
 "Not connected" = "Not connected";
 "Add a server" = "Add a server";
 "free" = "free";
+"ACTIVITY" = "ACTIVITY";
 "Manage servers" = "Manage servers";
 
 /* Filters */
@@ -91,7 +92,7 @@
 "Username" = "Username";
 "Optional" = "Optional";
 "Password" = "Password";
-"Save & Test" = "Save & Test";
+"Save" = "Save";
 
 /* Connection guide */
 "Quick setup" = "Quick setup";
@@ -160,6 +161,9 @@
 "Connected Peers" = "Connected Peers";
 "No Trackers" = "No Trackers";
 "No Peers Connected" = "No Peers Connected";
+"Low" = "Low";
+"Normal" = "Normal";
+"High" = "High";
 
 /* About */
 "About Drift" = "About Drift";

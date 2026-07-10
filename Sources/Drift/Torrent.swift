@@ -15,6 +15,8 @@ struct Torrent: Identifiable, Hashable {
     var peersConnected: Int
     var peersSendingToUs: Int
     var peersGettingFromUs: Int
+    var downRate: Int = 0
+    var upRate: Int = 0
 
     enum Status: String, CaseIterable {
         case downloading, seeding, paused
@@ -39,6 +41,7 @@ struct Torrent: Identifiable, Hashable {
         uploaded = remote.uploadedEver > 0 ? ByteCountFormatter.string(fromByteCount: remote.uploadedEver, countStyle: .file) : "—"
         ratio = remote.uploadRatio
         peersConnected = remote.peersConnected; peersSendingToUs = remote.peersSendingToUs; peersGettingFromUs = remote.peersGettingFromUs
+        downRate = remote.rateDownload; upRate = remote.rateUpload
     }
 
     /// Transmission reports -1 for "no ratio yet" and -2 for "unlimited seeding".

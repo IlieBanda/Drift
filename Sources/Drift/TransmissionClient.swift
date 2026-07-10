@@ -112,6 +112,10 @@ final class TransmissionClient {
         _ = try await request(method: "torrent-set", arguments: ["ids": [id], key: indices]) as RPCResponse
     }
 
+    func setFilePriority(id: Int, indices: [Int], priority: FilePriority) async throws {
+        _ = try await request(method: "torrent-set", arguments: ["ids": [id], priority.rpcKey: indices]) as RPCResponse
+    }
+
     private func request<T: Decodable>(method: String, arguments: [String: Any]) async throws -> T {
         for attempt in 0...1 {
             let (data, response) = try await performRequest(method: method, arguments: arguments)

@@ -215,6 +215,13 @@ private struct InspectorFilesTab: View {
                     Text(file.name).font(.callout).lineLimit(1).foregroundStyle(file.wanted ? Color.primary : Color.secondary)
                     HStack { ProgressView(value: file.progress).frame(width: 100); Text(file.sizeText).font(.caption2).foregroundStyle(.secondary) }
                 }
+                Spacer()
+                Picker("", selection: Binding(get: { file.priority }, set: { newValue in Task { await store.setFilePriority(fileIndex: file.index, priority: newValue) } })) {
+                    ForEach(FilePriority.allCases, id: \.self) { priority in Text(priority.title).tag(priority) }
+                }
+                .labelsHidden()
+                .frame(width: 90)
+                .disabled(!file.wanted)
             }
             .padding(.vertical, 2)
         }

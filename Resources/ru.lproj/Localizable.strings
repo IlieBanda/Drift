@@ -24,6 +24,7 @@
 "Not connected" = "Нет подключения";
 "Add a server" = "Добавьте сервер";
 "free" = "свободно";
+"ACTIVITY" = "АКТИВНОСТЬ";
 "Manage servers" = "Управление серверами";
 
 /* Filters */
@@ -91,7 +92,7 @@
 "Username" = "Имя пользователя";
 "Optional" = "Необязательно";
 "Password" = "Пароль";
-"Save & Test" = "Сохранить и проверить";
+"Save" = "Сохранить";
 
 /* Connection guide */
 "Quick setup" = "Быстрая настройка";
@@ -160,6 +161,9 @@
 "Connected Peers" = "Подключено пиров";
 "No Trackers" = "Нет трекеров";
 "No Peers Connected" = "Нет подключённых пиров";
+"Low" = "Низкий";
+"Normal" = "Обычный";
+"High" = "Высокий";
 
 /* About */
 "About Drift" = "О приложении Drift";

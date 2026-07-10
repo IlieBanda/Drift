@@ -1,6 +1,9 @@
+import AppKit
 import Foundation
 import Observation
 import UserNotifications
+
+struct SpeedSample: Equatable { let down: Int; let up: Int }
 
 @MainActor @Observable
 final class TorrentStore {
@@ -14,6 +17,9 @@ final class TorrentStore {
     var errorMessage: String?
     var session: SessionSettings?
     var freeSpace: Int64?
+    var speedHistory: [SpeedSample] = []
+    var totalDownRate: Int { torrents.reduce(0) { $0 + $1.downRate } }
+    var totalUpRate: Int { torrents.reduce(0) { $0 + $1.upRate } }
     var inspectorTorrentID: Int?
     var inspectorDetail: TorrentDetail?
     private let client = TransmissionClient()
@@ -45,13 +51,14 @@ final class TorrentStore {
     func stopPolling() { pollTask?.cancel(); pollTask = nil }
     func loadSavedConnection() { let defaults = UserDefaults.standard; let previous = UserDefaults(suiteName: "ru.iliebanda.Drift"); if let data = defaults.data(forKey: "serverProfiles"), let saved = try? JSONDecoder().decode([ServerProfile].self, from: data), !saved.isEmpty { servers = saved } else if let data = previous?.data(forKey: "serverProfiles"), let saved = try? JSONDecoder().decode([ServerProfile].self, from: data), !saved.isEmpty { servers = saved; persistServers() } else if let legacyHost = previous?.string(forKey: "rpcHost") ?? defaults.string(forKey: "rpcHost"), !legacyHost.isEmpty { servers = [ServerProfile(name: "Transmission", host: legacyHost, port: previous?.string(forKey: "rpcPort") ?? defaults.string(forKey: "rpcPort") ?? "9091", username: previous?.string(forKey: "rpcUsername") ?? defaults.string(forKey: "rpcUsername") ?? "")] ; persistServers() } else { servers = [ServerProfile(name: String(localized: "Local Transmission"), host: "localhost")] }; selectedServerID = UUID(uuidString: defaults.string(forKey: "selectedServerID") ?? "") ?? servers.first?.id; if let selected = selectedServer { apply(selected) } }
     var selectedServer: ServerProfile? { servers.first { $0.id == selectedServerID } }
-    func selectServer(_ id: UUID) { selectedServerID = id; UserDefaults.standard.set(id.uuidString, forKey: "selectedServerID"); session = nil; freeSpace = nil; if let server = selectedServer { apply(server); Task { await refresh() } } }
+    func selectServer(_ id: UUID) { selectedServerID = id; UserDefaults.standard.set(id.uuidString, forKey: "selectedServerID"); session = nil; freeSpace = nil; speedHistory = []; if let server = selectedServer { apply(server); Task { await refresh() } } }
     func addServer() { let server = ServerProfile(name: String(localized: "New Server"), host: "192.168.1.100"); servers.append(server); selectedServerID = server.id; persistServers(); apply(server); isConnected = false }
     func deleteServer(_ id: UUID) { guard servers.count > 1 else { return }; servers.removeAll { $0.id == id }; selectedServerID = servers.first?.id; if let selectedServerID { UserDefaults.standard.set(selectedServerID.uuidString, forKey: "selectedServerID") }; persistServers(); if let selectedServer { apply(selectedServer); Task { await refresh() } } }
     func updateServer(_ server: ServerProfile) { guard let index = servers.firstIndex(where: { $0.id == server.id }) else { return }; servers[index] = server; persistServers(); if server.id == selectedServerID { apply(server) } }
     private func persistServers() { UserDefaults.standard.set(try? JSONEncoder().encode(servers), forKey: "serverProfiles") }
     private func apply(_ server: ServerProfile) { updateConnection(host: server.host, port: server.port, username: server.username, password: server.password) }
     var visibleTorrents: [Torrent] { torrents.filter { filter.matches($0.status) && (search.isEmpty || $0.name.localizedCaseInsensitiveContains(search)) } }
+    func count(for filter: TorrentFilter) -> Int { torrents.count { filter.matches($0.status) } }
     var selectedTorrents: [Torrent] { torrents.filter { selectedIDs.contains($0.id) } }
     /// True when every selected torrent is paused, so the group action becomes "resume".
     var selectionIsPaused: Bool { !selectedTorrents.isEmpty && selectedTorrents.allSatisfy { $0.status == .paused } }
@@ -63,6 +70,8 @@ final class TorrentStore {
             let updated = remote.map(Torrent.init)
             notifyIfCompleted(updated)
             torrents = updated
+            recordSpeedSample()
+            updateDockBadge()
             let liveIDs = Set(torrents.map(\.id))
             selectedIDs.formIntersection(liveIDs)
             notifiedCompletedIDs.formIntersection(liveIDs)
@@ -75,6 +84,14 @@ final class TorrentStore {
             if !silently { isConnected = false }
             errorMessage = friendly(error)
         }
+    }
+    private func recordSpeedSample() {
+        speedHistory.append(SpeedSample(down: totalDownRate, up: totalUpRate))
+        if speedHistory.count > 60 { speedHistory.removeFirst(speedHistory.count - 60) }
+    }
+    private func updateDockBadge() {
+        let active = torrents.filter { $0.status == .downloading && $0.progress < 1 }.count
+        NSApplication.shared.dockTile.badgeLabel = active > 0 ? "\(active)" : ""
     }
     private func notifyIfCompleted(_ updated: [Torrent]) {
         for torrent in updated where torrent.progress >= 1 && !notifiedCompletedIDs.contains(torrent.id) {
@@ -150,6 +167,10 @@ final class TorrentStore {
     func setFileWanted(fileIndex: Int, wanted: Bool) async {
         guard let inspectorTorrentID else { return }
         do { try await client.setFilesWanted(id: inspectorTorrentID, indices: [fileIndex], wanted: wanted); await loadInspectorDetail() } catch { errorMessage = String(localized: "Could not update file selection") }
+    }
+    func setFilePriority(fileIndex: Int, priority: FilePriority) async {
+        guard let inspectorTorrentID else { return }
+        do { try await client.setFilePriority(id: inspectorTorrentID, indices: [fileIndex], priority: priority); await loadInspectorDetail() } catch { errorMessage = String(localized: "Could not update file selection") }
     }
 }
 

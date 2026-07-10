@@ -135,7 +135,7 @@ struct Sidebar: View {
     static let freeSpaceFormatter: ByteCountFormatter = { let f = ByteCountFormatter(); f.countStyle = .file; return f }()
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            HStack { Image(systemName: "arrow.down.circle.fill").font(.title2).foregroundStyle(.blue); Text(verbatim: "Drift").font(.title2.bold()); Spacer() }.padding(20)
+            HStack(spacing: 10) { DriftSidebarMark().frame(width: 52, height: 52); Text(verbatim: "Drift").font(.system(size: 24, weight: .bold)); Spacer() }.padding(20)
             Text("TRANSMISSION").font(.caption2.monospaced().bold()).foregroundStyle(.secondary).padding(.horizontal, 20).padding(.top, 8)
             ForEach(TorrentFilter.allCases) { filter in
                 Button { store.filter = filter } label: {
@@ -143,6 +143,14 @@ struct Sidebar: View {
                         Image(systemName: filter.systemImage).frame(width: 16, alignment: .center)
                         Text(filter.title)
                         Spacer()
+                        let count = store.count(for: filter)
+                        if count > 0 {
+                            Text("\(count)")
+                                .font(.caption.monospacedDigit())
+                                .foregroundStyle(.secondary)
+                                .padding(.horizontal, 6).padding(.vertical, 1)
+                                .background(.quaternary.opacity(0.5), in: Capsule())
+                        }
                     }
                     .padding(.vertical, 5)
                     .contentShape(Rectangle())
@@ -152,6 +160,9 @@ struct Sidebar: View {
                 .padding(.horizontal, 20)
             }
             Spacer()
+            if store.isConnected && store.speedHistory.count > 1 {
+                SidebarActivityView(store: store)
+            }
             Divider()
             VStack(alignment: .leading, spacing: 8) {
                 HStack(spacing: 8) {
@@ -192,6 +203,78 @@ struct Sidebar: View {
     }
 }
 
+/// Live network activity for the whole session: a 2-minute sparkline of total
+/// download/upload rates, sampled on every poll tick.
+struct SidebarActivityView: View {
+    var store: TorrentStore
+    static let rateFormatter: ByteCountFormatter = { let f = ByteCountFormatter(); f.countStyle = .binary; return f }()
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text("ACTIVITY").font(.caption2.monospaced().bold()).foregroundStyle(.secondary)
+            SpeedSparkline(samples: store.speedHistory)
+                .frame(height: 36)
+            HStack(spacing: 12) {
+                Label(rateText(store.totalDownRate), systemImage: "arrow.down")
+                    .foregroundStyle(store.totalDownRate > 0 ? Color.blue : Color.secondary)
+                Label(rateText(store.totalUpRate), systemImage: "arrow.up")
+                    .foregroundStyle(store.totalUpRate > 0 ? Color.green : Color.secondary)
+            }
+            .font(.caption.monospacedDigit())
+            .labelStyle(.titleAndIcon)
+        }
+        .padding(.horizontal, 20).padding(.bottom, 14)
+    }
+
+    private func rateText(_ rate: Int) -> String {
+        rate > 0 ? Self.rateFormatter.string(fromByteCount: Int64(rate)) + "/s" : "—"
+    }
+}
+
+struct SpeedSparkline: View {
+    let samples: [SpeedSample]
+
+    var body: some View {
+        GeometryReader { geo in
+            let peak = max(samples.map { max($0.down, $0.up) }.max() ?? 1, 1)
+            ZStack {
+                area(of: \.down, peak: peak, in: geo.size).fill(Color.blue.opacity(0.15))
+                line(of: \.down, peak: peak, in: geo.size).stroke(Color.blue, lineWidth: 1.5)
+                line(of: \.up, peak: peak, in: geo.size).stroke(Color.green, lineWidth: 1.5)
+            }
+        }
+        .animation(.easeInOut(duration: 0.4), value: samples)
+    }
+
+    private func points(of key: KeyPath<SpeedSample, Int>, peak: Int, in size: CGSize) -> [CGPoint] {
+        let count = max(samples.count - 1, 1)
+        return samples.enumerated().map { index, sample in
+            CGPoint(x: size.width * CGFloat(index) / CGFloat(count),
+                    y: size.height - size.height * CGFloat(sample[keyPath: key]) / CGFloat(peak))
+        }
+    }
+
+    private func line(of key: KeyPath<SpeedSample, Int>, peak: Int, in size: CGSize) -> Path {
+        Path { path in
+            let pts = points(of: key, peak: peak, in: size)
+            guard let first = pts.first else { return }
+            path.move(to: first)
+            for pt in pts.dropFirst() { path.addLine(to: pt) }
+        }
+    }
+
+    private func area(of key: KeyPath<SpeedSample, Int>, peak: Int, in size: CGSize) -> Path {
+        Path { path in
+            let pts = points(of: key, peak: peak, in: size)
+            guard let first = pts.first, let last = pts.last else { return }
+            path.move(to: CGPoint(x: first.x, y: size.height))
+            for pt in pts { path.addLine(to: pt) }
+            path.addLine(to: CGPoint(x: last.x, y: size.height))
+            path.closeSubpath()
+        }
+    }
+}
+
 struct OfflineView: View { var store: TorrentStore; var body: some View { VStack(spacing: 16) { Image(systemName: "bolt.horizontal.circle").font(.system(size: 52)).foregroundStyle(.secondary); Text("Connect to Transmission").font(.title2.bold()); Text("Drift needs a Transmission RPC connection to show your downloads.").foregroundStyle(.secondary); HStack { SettingsLink { Label("Connection settings", systemImage: "gearshape") }.buttonStyle(.borderedProminent); Button { Task { await store.refresh() } } label: { Label("Try again", systemImage: "arrow.clockwise") }.buttonStyle(.bordered) } }.frame(maxWidth: .infinity, maxHeight: .infinity).padding(40) } }
 struct EmptyTorrentsView: View { let add: () -> Void; var body: some View { let content = ContentUnavailableView { Label("No torrents yet", systemImage: "tray") } description: { Text("Your Transmission downloads will appear here.") } actions: { Button("Add Magnet Link", action: add).buttonStyle(.borderedProminent) }; return content.frame(maxWidth: .infinity, maxHeight: .infinity) } }
 struct NoSearchResultsView: View { let query: String; var body: some View { ContentUnavailableView.search(text: query).frame(maxWidth: .infinity, maxHeight: .infinity) } }
@@ -220,11 +303,13 @@ struct TorrentRowDetailed: View {
                     .foregroundStyle(torrent.status == .paused ? Color.secondary : (torrent.status == .seeding ? Color.green : Color.blue))
             }
             .frame(width: 32, height: 32)
-            VStack(alignment: .leading, spacing: 4) {
+            VStack(alignment: .leading, spacing: 3) {
                 Text(torrent.name).font(.system(size: 14, weight: .medium)).lineLimit(1)
                 Text(progressLine).font(.caption).foregroundStyle(.secondary)
                 ProgressView(value: animatedProgress).tint(torrent.status == .seeding ? Color.green : Color.blue)
-                Text(peersLine).font(.caption).foregroundStyle(.secondary)
+                if let peersLine {
+                    Text(peersLine).font(.caption).foregroundStyle(.secondary)
+                }
             }
             Spacer(minLength: 12)
             if animatedProgress >= 1 {
@@ -237,7 +322,7 @@ struct TorrentRowDetailed: View {
                     .background(.quaternary.opacity(0.4), in: Capsule())
             }
         }
-        .padding(.vertical, 6)
+        .padding(.vertical, 4)
         .onAppear { animatedProgress = torrent.progress }
         .onChange(of: torrent.progress) { _, newValue in withAnimation(.easeInOut(duration: 0.6)) { animatedProgress = newValue } }
     }
@@ -254,7 +339,8 @@ struct TorrentRowDetailed: View {
             return torrent.size
         }
     }
-    private var peersLine: String {
+    /// nil when the line would carry no information (idle seeding, paused) — keeps quiet rows compact.
+    private var peersLine: String? {
         switch torrent.status {
         case .downloading:
             let from = String(localized: "Downloading from"); let of = String(localized: "of"); let peers = String(localized: "peers")
@@ -264,13 +350,14 @@ struct TorrentRowDetailed: View {
             if torrent.uploadSpeed != "—" { line += ", \(uploadLabel) \(torrent.uploadSpeed)" }
             return line
         case .seeding:
+            guard torrent.peersGettingFromUs > 0 || torrent.uploadSpeed != "—" else { return nil }
             let to = String(localized: "Seeding to"); let of = String(localized: "of"); let peers = String(localized: "peers")
             var line = "\(to) \(torrent.peersGettingFromUs) \(of) \(torrent.peersConnected) \(peers)"
             let uploadLabel = String(localized: "U:")
             if torrent.uploadSpeed != "—" { line += " — \(uploadLabel) \(torrent.uploadSpeed)" }
             return line
         case .paused:
-            return String(localized: "Paused")
+            return nil
         }
     }
 }
@@ -376,7 +463,9 @@ struct ServersTab: View {
                 ForEach(store.servers) { server in
                     Button { store.selectServer(server.id) } label: {
                         HStack(spacing: 10) { Image(systemName: "server.rack").foregroundStyle(server.id == store.selectedServerID ? .blue : .secondary); VStack(alignment: .leading, spacing: 2) { Text(server.name).lineLimit(1); Text(server.host).font(.caption).foregroundStyle(.secondary).lineLimit(1).truncationMode(.middle) }; Spacer(); if server.id == store.selectedServerID { Image(systemName: "checkmark").font(.caption.bold()).foregroundStyle(.blue) } }
-                    }.buttonStyle(.plain).padding(9).background(server.id == store.selectedServerID ? Color.accentColor.opacity(0.12) : .clear, in: RoundedRectangle(cornerRadius: 8))
+                        .padding(9)
+                        .contentShape(Rectangle())
+                    }.buttonStyle(.plain).background(server.id == store.selectedServerID ? Color.accentColor.opacity(0.12) : .clear, in: RoundedRectangle(cornerRadius: 8))
                 }
                 Spacer()
                 Button { store.addServer() } label: { Label("Add Server", systemImage: "plus") }.buttonStyle(.bordered)
@@ -394,8 +483,45 @@ struct ServersTab: View {
 struct ServerEditor: View {
     var server: ServerProfile
     var store: TorrentStore
-    @State private var name = ""; @State private var host = ""; @State private var port = ""; @State private var username = ""; @State private var password = ""
-    var body: some View { VStack(alignment: .leading, spacing: 16) { VStack(alignment: .leading, spacing: 4) { Text("Connection").font(.title2.bold()); Text("Connect Drift to a Transmission RPC server.").foregroundStyle(.secondary) }; LabeledField(title: "Name", text: $name, placeholder: "Home server"); HStack(spacing: 10) { LabeledField(title: "Host", text: $host, placeholder: "192.168.100.15"); LabeledField(title: "Port", text: $port, placeholder: "9091").frame(width: 90) }; LabeledField(title: "Username", text: $username, placeholder: "Optional"); VStack(alignment: .leading, spacing: 6) { Text("Password").font(.caption).foregroundStyle(.secondary); SecureField("Optional", text: $password).textFieldStyle(.roundedBorder) }; HStack { Spacer(); Button("Save & Test") { store.updateServer(ServerProfile(id: server.id, name: name, host: host, port: port, username: username, password: password)); store.selectServer(server.id); Task { await store.refresh() } }.buttonStyle(.borderedProminent) } }.onAppear { name = server.name; host = server.host; port = server.port; username = server.username; password = server.password } }
+    @State private var name = ""
+    @State private var host = ""
+    @State private var port = ""
+    @State private var username = ""
+    @State private var password = ""
+
+    private var trimmedName: String { name.trimmingCharacters(in: .whitespacesAndNewlines) }
+    private var trimmedHost: String { host.trimmingCharacters(in: .whitespacesAndNewlines) }
+    private var isValid: Bool { !trimmedName.isEmpty && !trimmedHost.isEmpty }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Connection").font(.title2.bold())
+                Text("Connect Drift to a Transmission RPC server.").foregroundStyle(.secondary)
+            }
+            LabeledField(title: "Name", text: $name, placeholder: "Home server")
+            HStack(spacing: 10) {
+                LabeledField(title: "Host", text: $host, placeholder: "192.168.100.15")
+                LabeledField(title: "Port", text: $port, placeholder: "9091").frame(width: 90)
+            }
+            LabeledField(title: "Username", text: $username, placeholder: "Optional")
+            VStack(alignment: .leading, spacing: 6) {
+                Text("Password").font(.caption).foregroundStyle(.secondary)
+                SecureField("Optional", text: $password).textFieldStyle(.roundedBorder)
+            }
+            HStack {
+                Spacer()
+                Button("Save") {
+                    store.updateServer(ServerProfile(id: server.id, name: trimmedName, host: trimmedHost, port: port, username: username, password: password))
+                    store.selectServer(server.id)
+                    Task { await store.refresh() }
+                }
+                .buttonStyle(.borderedProminent)
+                .disabled(!isValid)
+            }
+        }
+        .onAppear { name = server.name; host = server.host; port = server.port; username = server.username; password = server.password }
+    }
 }
 struct LabeledField: View { let title: LocalizedStringKey; @Binding var text: String; let placeholder: LocalizedStringKey; var body: some View { VStack(alignment: .leading, spacing: 6) { Text(title).font(.caption).foregroundStyle(.secondary); TextField(placeholder, text: $text).textFieldStyle(.roundedBorder) } } }
 struct ConnectionGuide: View { var body: some View { VStack(alignment: .leading, spacing: 8) { Text("Quick setup").font(.headline); Text("In Transmission, open Settings → Remote and enable remote access. Use the server IP and RPC port above.").font(.caption).foregroundStyle(.secondary); Link("Read the RPC guide ↗", destination: URL(string: "https://github.com/transmission/transmission/blob/main/docs/rpc-spec.md")!).font(.caption) }.padding(14).background(.quaternary.opacity(0.5), in: RoundedRectangle(cornerRadius: 12)) } }

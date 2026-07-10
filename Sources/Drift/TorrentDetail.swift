@@ -1,4 +1,4 @@
-import Foundation
+import SwiftUI
 
 struct TorrentDetail: Identifiable {
     let id: Int
@@ -42,7 +42,14 @@ struct TorrentDetail: Identifiable {
         peers = remote.peers.map(PeerInfo.init)
         let stats = remote.fileStats
         files = remote.files.enumerated().map { index, file in
-            FileEntry(index: index, name: file.name, size: file.length, bytesCompleted: file.bytesCompleted, wanted: index < stats.count ? stats[index].wanted : true)
+            FileEntry(
+                index: index,
+                name: file.name,
+                size: file.length,
+                bytesCompleted: file.bytesCompleted,
+                wanted: index < stats.count ? stats[index].wanted : true,
+                priority: FilePriority(rpcValue: index < stats.count ? stats[index].priority : 0)
+            )
         }
     }
 
@@ -94,7 +101,32 @@ struct FileEntry: Identifiable {
     let size: Int64
     let bytesCompleted: Int64
     let wanted: Bool
+    let priority: FilePriority
 
     var sizeText: String { ByteCountFormatter.string(fromByteCount: size, countStyle: .file) }
     var progress: Double { size > 0 ? Double(bytesCompleted) / Double(size) : 0 }
+}
+
+enum FilePriority: Int, CaseIterable {
+    case low = -1
+    case normal = 0
+    case high = 1
+
+    init(rpcValue: Int) { self = FilePriority(rawValue: rpcValue) ?? .normal }
+
+    var rpcKey: String {
+        switch self {
+        case .low: "priority-low"
+        case .normal: "priority-normal"
+        case .high: "priority-high"
+        }
+    }
+
+    var title: LocalizedStringKey {
+        switch self {
+        case .low: "Low"
+        case .normal: "Normal"
+        case .high: "High"
+        }
+    }
 }
