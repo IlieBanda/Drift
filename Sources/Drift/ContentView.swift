@@ -49,11 +49,11 @@ struct ContentView: View {
                                 .contextMenu {
                                     let targets = actionTargets(for: torrent)
                                     let allPaused = targets.allSatisfy { $0.status == .paused }
-                                    Button(allPaused ? "Resume" : "Pause") { Task { await store.toggle(targets) } }
+                                    Button(allPaused ? "Resume" : "Pause", systemImage: allPaused ? "play.fill" : "pause.fill") { Task { await store.toggle(targets) } }
                                     Divider()
-                                    Button("Get Info") { if store.inspectorTorrentID == torrent.id { store.closeInspector() } else { store.openInspector(for: torrent.id) } }
+                                    Button("Get Info", systemImage: "info.circle") { if store.inspectorTorrentID == torrent.id { store.closeInspector() } else { store.openInspector(for: torrent.id) } }
                                     Divider()
-                                    Button(targets.count > 1 ? "Remove \(targets.count) Torrents…" : "Remove Torrent…", role: .destructive) { pendingDelete = targets }
+                                    Button(targets.count > 1 ? "Remove \(targets.count) Torrents…" : "Remove Torrent…", systemImage: "trash", role: .destructive) { pendingDelete = targets }
                                 }
                         }
                     }
@@ -131,7 +131,7 @@ struct SlowModeButton: View {
                 .foregroundStyle(session.altSpeedEnabled ? Color.orange : Color.primary)
         }
         .help("Slow Mode (alternate speed limits) — right-click to configure")
-        .contextMenu { Button("Configure Speed Limits…") { showPopover = true } }
+        .contextMenu { Button("Configure Speed Limits…", systemImage: "slider.horizontal.3") { showPopover = true } }
         .popover(isPresented: $showPopover) { SlowModePopover(store: store) }
     }
 }
