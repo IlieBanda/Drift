@@ -2,7 +2,7 @@
 set -euo pipefail
 MODE="${1:-run}"
 APP_NAME="Drift"
-BUNDLE_ID="ru.iliebanda.Drift.dev"
+BUNDLE_ID="ru.iliebanda.Drift"
 APP_VERSION="1.0"
 APP_BUILD="1"
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
