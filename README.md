@@ -62,6 +62,19 @@ Drift isn't notarized yet (that requires a paid Apple Developer account), so on 
 - **Right-click (or Control-click) the app → Open → Open**, once — macOS remembers your choice after that, or
 - Run `xattr -cr /Applications/Drift.app` in Terminal to clear the quarantine flag.
 
+### Signing with a Developer ID (optional)
+
+With a paid Apple Developer account, `dmg`/`release` builds can be signed with a real
+certificate instead of ad-hoc, which is a prerequisite for notarization:
+
+```bash
+DEVELOPER_ID_IDENTITY="Developer ID Application: Your Name (TEAMID)" ./script/build_and_run.sh dmg
+xcrun notarytool submit dist/Drift-1.0.dmg --keychain-profile "AC_PASSWORD" --wait
+xcrun stapler staple dist/Drift-1.0.dmg
+```
+
+(`--keychain-profile` assumes you've stored credentials once via `xcrun notarytool store-credentials`.)
+
 ## Connection security
 
 Drift talks to Transmission's RPC API over plain HTTP by default, matching Transmission's own default configuration. This traffic never leaves your local network (`NSAllowsLocalNetworking` is the only App Transport Security exception Drift declares — arbitrary internet loads are not allowed). If your Transmission daemon is exposed beyond your LAN (e.g. over the internet or through a reverse proxy), put it behind HTTPS/a VPN — Drift does not encrypt RPC traffic itself.
