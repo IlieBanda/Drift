@@ -129,6 +129,7 @@ struct SlowModeButton: View {
         Button { Task { await store.toggleSlowMode() } } label: {
             Image(systemName: "tortoise")
                 .foregroundStyle(session.altSpeedEnabled ? Color.orange : Color.primary)
+                .padding(.leading, 2)
         }
         .help("Slow Mode (alternate speed limits) — right-click to configure")
         .contextMenu { Button("Configure Speed Limits…", systemImage: "slider.horizontal.3") { showPopover = true } }
