@@ -49,12 +49,50 @@ final class TorrentStore {
         }
     }
     func stopPolling() { pollTask?.cancel(); pollTask = nil }
-    func loadSavedConnection() { let defaults = UserDefaults.standard; let previous = UserDefaults(suiteName: "ru.iliebanda.Drift"); if let data = defaults.data(forKey: "serverProfiles"), let saved = try? JSONDecoder().decode([ServerProfile].self, from: data), !saved.isEmpty { servers = saved } else if let data = previous?.data(forKey: "serverProfiles"), let saved = try? JSONDecoder().decode([ServerProfile].self, from: data), !saved.isEmpty { servers = saved; persistServers() } else if let legacyHost = previous?.string(forKey: "rpcHost") ?? defaults.string(forKey: "rpcHost"), !legacyHost.isEmpty { servers = [ServerProfile(name: "Transmission", host: legacyHost, port: previous?.string(forKey: "rpcPort") ?? defaults.string(forKey: "rpcPort") ?? "9091", username: previous?.string(forKey: "rpcUsername") ?? defaults.string(forKey: "rpcUsername") ?? "")] ; persistServers() } else { servers = [ServerProfile(name: String(localized: "Local Transmission"), host: "localhost")] }; selectedServerID = UUID(uuidString: defaults.string(forKey: "selectedServerID") ?? "") ?? servers.first?.id; if let selected = selectedServer { apply(selected) } }
+    /// A server's plaintext password used to live inline in the persisted `ServerProfile` JSON.
+    /// `ServerProfile.CodingKeys` no longer includes it, but this lets us pull any leftover
+    /// password out of already-saved data (this session only) so it can migrate to Keychain.
+    private struct LegacyPassword: Decodable { let id: UUID; let password: String }
+
+    private func migrateLegacyPasswords(from data: Data) {
+        guard let legacy = try? JSONDecoder().decode([LegacyPassword].self, from: data) else { return }
+        for entry in legacy where !entry.password.isEmpty {
+            KeychainHelper.savePassword(entry.password, forServerID: entry.id)
+        }
+    }
+
+    func loadSavedConnection() {
+        let defaults = UserDefaults.standard
+        let previous = UserDefaults(suiteName: "ru.iliebanda.Drift")
+        if let data = defaults.data(forKey: "serverProfiles"), let saved = try? JSONDecoder().decode([ServerProfile].self, from: data), !saved.isEmpty {
+            migrateLegacyPasswords(from: data)
+            servers = saved
+            // Guarantees any leftover plaintext "password" key from before this field was
+            // Keychain-only gets overwritten on disk, even if the user changes nothing this run.
+            if String(decoding: data, as: UTF8.self).contains("\"password\"") { persistServers() }
+        } else if let data = previous?.data(forKey: "serverProfiles"), let saved = try? JSONDecoder().decode([ServerProfile].self, from: data), !saved.isEmpty {
+            migrateLegacyPasswords(from: data)
+            servers = saved
+            persistServers()
+        } else if let legacyHost = previous?.string(forKey: "rpcHost") ?? defaults.string(forKey: "rpcHost"), !legacyHost.isEmpty {
+            let server = ServerProfile(name: "Transmission", host: legacyHost, port: previous?.string(forKey: "rpcPort") ?? defaults.string(forKey: "rpcPort") ?? "9091", username: previous?.string(forKey: "rpcUsername") ?? defaults.string(forKey: "rpcUsername") ?? "")
+            if let legacyPassword = previous?.string(forKey: "rpcPassword") ?? defaults.string(forKey: "rpcPassword"), !legacyPassword.isEmpty {
+                KeychainHelper.savePassword(legacyPassword, forServerID: server.id)
+            }
+            servers = [server]
+            persistServers()
+        } else {
+            servers = [ServerProfile(name: String(localized: "Local Transmission"), host: "localhost")]
+        }
+        servers = servers.map { server in var s = server; s.password = KeychainHelper.readPassword(forServerID: server.id); return s }
+        selectedServerID = UUID(uuidString: defaults.string(forKey: "selectedServerID") ?? "") ?? servers.first?.id
+        if let selected = selectedServer { apply(selected) }
+    }
     var selectedServer: ServerProfile? { servers.first { $0.id == selectedServerID } }
     func selectServer(_ id: UUID) { selectedServerID = id; UserDefaults.standard.set(id.uuidString, forKey: "selectedServerID"); session = nil; freeSpace = nil; speedHistory = []; if let server = selectedServer { apply(server); Task { await refresh() } } }
     func addServer() { let server = ServerProfile(name: String(localized: "New Server"), host: "192.168.1.100"); servers.append(server); selectedServerID = server.id; persistServers(); apply(server); isConnected = false }
-    func deleteServer(_ id: UUID) { guard servers.count > 1 else { return }; servers.removeAll { $0.id == id }; selectedServerID = servers.first?.id; if let selectedServerID { UserDefaults.standard.set(selectedServerID.uuidString, forKey: "selectedServerID") }; persistServers(); if let selectedServer { apply(selectedServer); Task { await refresh() } } }
-    func updateServer(_ server: ServerProfile) { guard let index = servers.firstIndex(where: { $0.id == server.id }) else { return }; servers[index] = server; persistServers(); if server.id == selectedServerID { apply(server) } }
+    func deleteServer(_ id: UUID) { guard servers.count > 1 else { return }; servers.removeAll { $0.id == id }; KeychainHelper.deletePassword(forServerID: id); selectedServerID = servers.first?.id; if let selectedServerID { UserDefaults.standard.set(selectedServerID.uuidString, forKey: "selectedServerID") }; persistServers(); if let selectedServer { apply(selectedServer); Task { await refresh() } } }
+    func updateServer(_ server: ServerProfile) { guard let index = servers.firstIndex(where: { $0.id == server.id }) else { return }; servers[index] = server; KeychainHelper.savePassword(server.password, forServerID: server.id); persistServers(); if server.id == selectedServerID { apply(server) } }
     private func persistServers() { UserDefaults.standard.set(try? JSONEncoder().encode(servers), forKey: "serverProfiles") }
     private func apply(_ server: ServerProfile) { updateConnection(host: server.host, port: server.port, username: server.username, password: server.password) }
     var visibleTorrents: [Torrent] { torrents.filter { filter.matches($0.status) && (search.isEmpty || $0.name.localizedCaseInsensitiveContains(search)) } }
