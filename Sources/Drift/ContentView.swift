@@ -116,15 +116,16 @@ struct ContentView: View {
                     if let session = store.session {
                         SlowModeButton(session: session, store: store, showPopover: $showSlowModePopover)
                     }
-                    Button { Task { await store.refresh() } } label: { Image(systemName: "arrow.clockwise") }
+                    Button { Task { await store.refresh() } } label: { Image(systemName: "arrow.clockwise") }.help("Refresh")
                     if !store.selectedIDs.isEmpty {
                         Button { Task { await store.toggle(store.selectedTorrents) } } label: { Image(systemName: store.selectionIsPaused ? "play.fill" : "pause.fill") }
-                        Button(role: .destructive) { pendingDelete = store.selectedTorrents } label: { Image(systemName: "trash") }
+                            .help(store.selectionIsPaused ? "Resume" : "Pause")
+                        Button(role: .destructive) { pendingDelete = store.selectedTorrents } label: { Image(systemName: "trash") }.help("Remove")
                     }
                     if store.selectedIDs.count == 1, let id = store.selectedIDs.first {
                         Button {
                             if store.inspectorTorrentID == id { store.closeInspector() } else { store.openInspector(for: id) }
-                        } label: { Image(systemName: "info.circle") }
+                        } label: { Image(systemName: "info.circle") }.help("Get Info")
                     }
                     Button { store.showAddSheet = true } label: { Image(systemName: "plus") }.help("Add Torrent").disabled(!store.isConnected)
                 }
