@@ -583,23 +583,29 @@ struct SetLocationSheet: View {
 
 struct ServersTab: View {
     var store: TorrentStore
+    /// Which server's settings are shown in the editor pane — independent of `store.selectedServerID`
+    /// (the actually-connected server). Browsing the list to inspect/edit a different server must
+    /// not silently switch the active connection; only "Save" in `ServerEditor` does that.
+    @State private var editingServerID: UUID?
+    private var editingServer: ServerProfile? { store.servers.first { $0.id == editingServerID } ?? store.selectedServer }
     var body: some View {
         HStack(spacing: 0) {
             VStack(alignment: .leading, spacing: 12) {
                 Text("SERVERS").font(.caption2.monospaced().bold()).foregroundStyle(.secondary)
                 ForEach(store.servers) { server in
-                    Button { store.selectServer(server.id) } label: {
+                    let isEditing = server.id == (editingServerID ?? store.selectedServerID)
+                    Button { editingServerID = server.id } label: {
                         HStack(spacing: 10) { Image(systemName: "server.rack").foregroundStyle(server.id == store.selectedServerID ? .blue : .secondary); VStack(alignment: .leading, spacing: 2) { Text(server.name).lineLimit(1); Text(server.host).font(.caption).foregroundStyle(.secondary).lineLimit(1).truncationMode(.middle) }; Spacer(); if server.id == store.selectedServerID { Image(systemName: "checkmark").font(.caption.bold()).foregroundStyle(.blue) } }
                         .padding(9)
                         .contentShape(Rectangle())
-                    }.buttonStyle(.plain).background(server.id == store.selectedServerID ? Color.accentColor.opacity(0.12) : .clear, in: RoundedRectangle(cornerRadius: 8))
+                    }.buttonStyle(.plain).background(isEditing ? Color.accentColor.opacity(0.12) : .clear, in: RoundedRectangle(cornerRadius: 8))
                 }
                 Spacer()
-                Button { store.addServer() } label: { Label("Add Server", systemImage: "plus") }.buttonStyle(.bordered)
+                Button { editingServerID = store.addServer() } label: { Label("Add Server", systemImage: "plus") }.buttonStyle(.bordered)
             }.padding(18).frame(width: 240).background(.quaternary.opacity(0.35))
             Divider()
             VStack(alignment: .leading, spacing: 18) {
-                if let selected = store.selectedServer { ServerEditor(server: selected, store: store) }
+                if let editingServer { ServerEditor(server: editingServer, store: store).id(editingServer.id) }
                 Spacer()
                 ConnectionGuide()
             }.padding(28).frame(width: 430)

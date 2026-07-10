@@ -95,7 +95,16 @@ final class TorrentStore {
     }
     var selectedServer: ServerProfile? { servers.first { $0.id == selectedServerID } }
     func selectServer(_ id: UUID) { selectedServerID = id; UserDefaults.standard.set(id.uuidString, forKey: "selectedServerID"); session = nil; freeSpace = nil; speedHistory = []; if let server = selectedServer { apply(server); Task { await refresh() } } }
-    func addServer() { let server = ServerProfile(name: String(localized: "New Server"), host: "192.168.1.100"); servers.append(server); selectedServerID = server.id; persistServers(); apply(server); isConnected = false }
+    /// Adds a new server profile to the list without switching the active connection to it —
+    /// only "Save" in the server editor (or explicitly picking it) should do that. Returns its id
+    /// so the caller can show it in an editor pane.
+    @discardableResult
+    func addServer() -> UUID {
+        let server = ServerProfile(name: String(localized: "New Server"), host: "192.168.1.100")
+        servers.append(server)
+        persistServers()
+        return server.id
+    }
     func deleteServer(_ id: UUID) { guard servers.count > 1 else { return }; servers.removeAll { $0.id == id }; KeychainHelper.deletePassword(forServerID: id); selectedServerID = servers.first?.id; if let selectedServerID { UserDefaults.standard.set(selectedServerID.uuidString, forKey: "selectedServerID") }; persistServers(); if let selectedServer { apply(selectedServer); Task { await refresh() } } }
     func updateServer(_ server: ServerProfile) { guard let index = servers.firstIndex(where: { $0.id == server.id }) else { return }; servers[index] = server; KeychainHelper.savePassword(server.password, forServerID: server.id); persistServers(); if server.id == selectedServerID { apply(server) } }
     private func persistServers() { UserDefaults.standard.set(try? JSONEncoder().encode(servers), forKey: "serverProfiles") }
