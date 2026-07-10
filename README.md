@@ -56,6 +56,10 @@ Drift isn't notarized yet (that requires a paid Apple Developer account), so on 
 - **Right-click (or Control-click) the app → Open → Open**, once — macOS remembers your choice after that, or
 - Run `xattr -cr /Applications/Drift.app` in Terminal to clear the quarantine flag.
 
+## Connection security
+
+Drift talks to Transmission's RPC API over plain HTTP by default, matching Transmission's own default configuration. This traffic never leaves your local network (`NSAllowsLocalNetworking` is the only App Transport Security exception Drift declares — arbitrary internet loads are not allowed). If your Transmission daemon is exposed beyond your LAN (e.g. over the internet or through a reverse proxy), put it behind HTTPS/a VPN — Drift does not encrypt RPC traffic itself.
+
 ## License
 
 MIT — see [LICENSE](LICENSE).

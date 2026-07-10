@@ -167,7 +167,7 @@ final class TorrentStore {
     }
     private func friendly(_ error: Error) -> String {
         let nsError = error as NSError
-        guard nsError.domain == NSURLErrorDomain else { return "\(error.localizedDescription) (\(nsError.domain) \(nsError.code))" }
+        guard nsError.domain == NSURLErrorDomain else { return String(localized: "Could not reach the Transmission server.") }
         let code = URLError.Code(rawValue: nsError.code)
         switch code {
         case .timedOut: return String(localized: "Server did not respond. Check the host, port, and that Transmission is running.")
