@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>%lld selected</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@count@</string>
+		<key>count</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>lld</string>
+			<key>one</key>
+			<string>выбран %lld</string>
+			<key>few</key>
+			<string>выбрано %lld</string>
+			<key>many</key>
+			<string>выбрано %lld</string>
+			<key>other</key>
+			<string>выбрано %lld</string>
+		</dict>
+	</dict>
+	<key>Remove %lld Torrents…</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@count@</string>
+		<key>count</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>lld</string>
+			<key>one</key>
+			<string>Удалить %lld торрент…</string>
+			<key>few</key>
+			<string>Удалить %lld торрента…</string>
+			<key>many</key>
+			<string>Удалить %lld торрентов…</string>
+			<key>other</key>
+			<string>Удалить %lld торрента…</string>
+		</dict>
+	</dict>
+	<key>Remove %lld torrents?</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@count@</string>
+		<key>count</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>lld</string>
+			<key>one</key>
+			<string>Удалить %lld торрент?</string>
+			<key>few</key>
+			<string>Удалить %lld торрента?</string>
+			<key>many</key>
+			<string>Удалить %lld торрентов?</string>
+			<key>other</key>
+			<string>Удалить %lld торрента?</string>
+		</dict>
+	</dict>
+	<key>%lld torrents will be removed from Transmission.</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@count@</string>
+		<key>count</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>lld</string>
+			<key>one</key>
+			<string>%lld торрент будет удалён из Transmission.</string>
+			<key>few</key>
+			<string>%lld торрента будут удалены из Transmission.</string>
+			<key>many</key>
+			<string>%lld торрентов будут удалены из Transmission.</string>
+			<key>other</key>
+			<string>%lld торрента будут удалены из Transmission.</string>
+		</dict>
+	</dict>
+</dict>
+</plist>

@@ -1,0 +1,165 @@
+/* Toolbar & main window */
+"Connect" = "Connect";
+"Add Torrent" = "Add Torrent";
+"Connecting to Transmission…" = "Connecting to Transmission…";
+"Search torrents" = "Search torrents";
+"Drift" = "Drift";
+"OK" = "OK";
+
+/* Torrent actions */
+"Resume" = "Resume";
+"Pause" = "Pause";
+"Remove Torrent…" = "Remove Torrent…";
+"Remove torrent?" = "Remove torrent?";
+"Remove" = "Remove";
+"Remove and Delete Files" = "Remove and Delete Files";
+"Cancel" = "Cancel";
+"%@ will be removed from Transmission." = "“%@” will be removed from Transmission.";
+
+/* Sidebar */
+"SERVER" = "SERVER";
+"Server" = "Server";
+"TRANSMISSION" = "TRANSMISSION";
+"Connected" = "Connected";
+"Not connected" = "Not connected";
+"Add a server" = "Add a server";
+"Manage servers" = "Manage servers";
+
+/* Filters */
+"All" = "All";
+"Downloading" = "Downloading";
+"Seeding" = "Seeding";
+"Paused" = "Paused";
+
+/* Offline state */
+"Connect to Transmission" = "Connect to Transmission";
+"Drift needs a Transmission RPC connection to show your downloads." = "Drift needs a Transmission RPC connection to show your downloads.";
+"Connection settings" = "Connection settings";
+"Try again" = "Try again";
+
+/* Empty state */
+"No torrents yet" = "No torrents yet";
+"Your Transmission downloads will appear here." = "Your Transmission downloads will appear here.";
+"Add Magnet Link" = "Add Magnet Link";
+
+/* Add torrent sheet */
+"Magnet link or torrent URL" = "Magnet link or torrent URL";
+"Drop a .torrent file here" = "Drop a .torrent file here";
+"Choose File…" = "Choose File…";
+"Add" = "Add";
+
+/* Menu commands */
+"Add Torrent…" = "Add Torrent…";
+"Select All Torrents" = "Select All Torrents";
+"Deselect All" = "Deselect All";
+"Torrent" = "Torrent";
+"Start All" = "Start All";
+"Pause All" = "Pause All";
+"List Style" = "List Style";
+"Detailed" = "Detailed";
+"Compact" = "Compact";
+"Card" = "Card";
+"Transmission-style" = "Transmission-style";
+
+/* Torrent row */
+"Uploaded" = "Uploaded";
+"Ratio" = "Ratio";
+"Remaining" = "Remaining";
+"of" = "of";
+"uploaded" = "uploaded";
+"ratio" = "ratio";
+"Downloading from" = "Downloading from";
+"peers" = "peers";
+"Connecting to peers…" = "Connecting to peers…";
+"Seeding to" = "Seeding to";
+"Waiting for peers…" = "Waiting for peers…";
+"D:" = "D:";
+"U:" = "U:";
+
+/* Settings */
+"SERVERS" = "SERVERS";
+"Add Server" = "Add Server";
+"Connection" = "Connection";
+"Connect Drift to a Transmission RPC server." = "Connect Drift to a Transmission RPC server.";
+"Name" = "Name";
+"Home server" = "Home server";
+"Host" = "Host";
+"192.168.100.15" = "192.168.100.15";
+"Port" = "Port";
+"9091" = "9091";
+"Username" = "Username";
+"Optional" = "Optional";
+"Password" = "Password";
+"Save & Test" = "Save & Test";
+
+/* Connection guide */
+"Quick setup" = "Quick setup";
+"In Transmission, open Settings → Remote and enable remote access. Use the server IP and RPC port above." = "In Transmission, open Settings → Remote and enable remote access. Use the server IP and RPC port above.";
+"Read the RPC guide ↗" = "Read the RPC guide ↗";
+
+/* Default server names */
+"New Server" = "New Server";
+"Local Transmission" = "Local Transmission";
+
+/* Preferences */
+"General" = "General";
+"Speed Limits" = "Speed Limits";
+"Servers" = "Servers";
+"Launch at login" = "Launch at login";
+"Keep Drift running after closing the window" = "Keep Drift running after closing the window";
+"Notify when a torrent finishes downloading" = "Notify when a torrent finishes downloading";
+"Connect to a server to manage speed limits." = "Connect to a server to manage speed limits.";
+"Normal Limits" = "Normal Limits";
+"Limit download speed" = "Limit download speed";
+"Limit upload speed" = "Limit upload speed";
+"KB/s" = "KB/s";
+"Slow Mode" = "Slow Mode";
+"Use alternate limits" = "Use alternate limits";
+"Limit speed" = "Limit speed";
+"Configure Speed Limits…" = "Configure Speed Limits…";
+"Download KB/s" = "Download KB/s";
+"Upload KB/s" = "Upload KB/s";
+"Apply" = "Apply";
+"Download Complete" = "Download Complete";
+"Default App" = "Default App";
+"Make Drift the default app for magnet links" = "Make Drift the default app for magnet links";
+"Make Drift the default app for .torrent files" = "Make Drift the default app for .torrent files";
+
+/* Errors */
+"Action failed" = "Action failed";
+"Could not add torrent" = "Could not add torrent";
+"Could not add torrent file" = "Could not add torrent file";
+"Could not remove torrent" = "Could not remove torrent";
+"Could not update speed limits" = "Could not update speed limits";
+"Could not update file selection" = "Could not update file selection";
+"Enter a valid server address, for example 192.168.100.15" = "Enter a valid server address, for example 192.168.100.15";
+"Server did not respond. Check the host, port, and that Transmission is running." = "Server did not respond. Check the host, port, and that Transmission is running.";
+"Transmission server is unavailable on the local network. Check that the Mac is reachable and Remote Access is enabled. (network code %lld)" = "Transmission server is unavailable on the local network. Check that the Mac is reachable and Remote Access is enabled. (network code %lld)";
+"This server requires HTTPS. Use an https:// address." = "This server requires HTTPS. Use an https:// address.";
+"Could not reach the Transmission server (%lld)." = "Could not reach the Transmission server (%lld).";
+
+/* Inspector */
+"Get Info" = "Get Info";
+"Activity" = "Activity";
+"Trackers" = "Trackers";
+"Peers" = "Peers";
+"Files" = "Files";
+"Hash" = "Hash";
+"Private Torrent" = "Private Torrent";
+"Added" = "Added";
+"Completed" = "Completed";
+"Comment" = "Comment";
+"Yes" = "Yes";
+"No" = "No";
+"Total Size" = "Total Size";
+"Downloaded" = "Downloaded";
+"Corrupt" = "Corrupt";
+"Download Speed" = "Download Speed";
+"Upload Speed" = "Upload Speed";
+"Connected Peers" = "Connected Peers";
+"No Trackers" = "No Trackers";
+"No Peers Connected" = "No Peers Connected";
+
+/* About */
+"About Drift" = "About Drift";
+"by Ilia Banda" = "by Ilia Banda";

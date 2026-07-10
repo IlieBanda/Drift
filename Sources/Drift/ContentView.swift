@@ -1,0 +1,368 @@
+import SwiftUI
+import UniformTypeIdentifiers
+
+struct ContentView: View {
+    var store: TorrentStore
+    @State private var pendingDelete: [Torrent] = []
+    @State private var showSlowModePopover = false
+
+    /// Right-clicking a row outside the current selection acts on that row alone, as in Finder.
+    private func actionTargets(for torrent: Torrent) -> [Torrent] {
+        store.selectedIDs.contains(torrent.id) ? store.selectedTorrents : [torrent]
+    }
+
+    var body: some View {
+        NavigationSplitView {
+            Sidebar(store: store)
+        } detail: {
+            VStack(spacing: 0) {
+                HStack {
+                    Text(store.filter.title).font(.largeTitle.bold())
+                    if store.selectedIDs.count > 1 { Text("\(store.selectedIDs.count) selected").font(.callout).foregroundStyle(.secondary).padding(.leading, 4) }
+                    Spacer()
+                    if !store.isConnected { SettingsLink { Label("Connect", systemImage: "bolt.horizontal.circle").frame(height: 16) }.buttonStyle(.borderedProminent) }
+                    if let session = store.session { SlowModeButton(session: session, store: store, showPopover: $showSlowModePopover) }
+                    Button { Task { await store.refresh() } } label: { Image(systemName: "arrow.clockwise").frame(width: 16, height: 16) }.buttonStyle(.bordered)
+                    Button { store.showAddSheet = true } label: { Label("Add Torrent", systemImage: "plus").frame(height: 16) }.buttonStyle(.borderedProminent).disabled(!store.isConnected)
+                    if !store.selectedIDs.isEmpty {
+                        Button { Task { await store.toggle(store.selectedTorrents) } } label: { Image(systemName: store.selectionIsPaused ? "play.fill" : "pause.fill").frame(width: 16, height: 16) }.buttonStyle(.bordered)
+                        Button(role: .destructive) { pendingDelete = store.selectedTorrents } label: { Image(systemName: "trash").frame(width: 16, height: 16) }.buttonStyle(.bordered)
+                    }
+                    if store.selectedIDs.count == 1, let id = store.selectedIDs.first {
+                        Button {
+                            if store.inspectorTorrentID == id { store.closeInspector() } else { store.openInspector(for: id) }
+                        } label: { Image(systemName: "info.circle").frame(width: 16, height: 16) }.buttonStyle(.bordered)
+                    }
+                }
+                .padding(.horizontal, 24).padding(.vertical, 18)
+                if store.isConnecting { ProgressView("Connecting to Transmission…").frame(maxWidth: .infinity, maxHeight: .infinity) }
+                else if !store.isConnected { OfflineView(store: store) }
+                else if store.visibleTorrents.isEmpty && !store.search.isEmpty { NoSearchResultsView(query: store.search) }
+                else if store.visibleTorrents.isEmpty { EmptyTorrentsView { store.showAddSheet = true } }
+                else {
+                    List(selection: Bindable(store).selectedIDs) {
+                        ForEach(store.visibleTorrents) { torrent in
+                            TorrentRow(torrent: torrent, style: store.appSettings.rowStyle).tag(torrent.id)
+                                .contextMenu {
+                                    let targets = actionTargets(for: torrent)
+                                    let allPaused = targets.allSatisfy { $0.status == .paused }
+                                    Button(allPaused ? "Resume" : "Pause") { Task { await store.toggle(targets) } }
+                                    Divider()
+                                    Button("Get Info") { if store.inspectorTorrentID == torrent.id { store.closeInspector() } else { store.openInspector(for: torrent.id) } }
+                                    Divider()
+                                    Button(targets.count > 1 ? "Remove \(targets.count) Torrents…" : "Remove Torrent…", role: .destructive) { pendingDelete = targets }
+                                }
+                        }
+                    }
+                    .listStyle(.inset)
+                    .onDeleteCommand { if !store.selectedIDs.isEmpty { pendingDelete = store.selectedTorrents } }
+                    .onChange(of: store.selectedIDs) { _, newValue in
+                        guard store.inspectorTorrentID != nil, let onlyID = newValue.count == 1 ? newValue.first : nil else { return }
+                        store.openInspector(for: onlyID)
+                    }
+                }
+            }
+            .searchable(text: Bindable(store).search, placement: .toolbar, prompt: "Search torrents")
+            .sheet(isPresented: Bindable(store).showAddSheet) {
+                AddTorrentView(onAddMagnet: { magnet in Task { await store.add(magnet) } }, onAddFile: { data in Task { await store.addTorrentFile(data: data) } })
+            }
+            .dropDestination(for: URL.self) { urls, _ in
+                let torrentFiles = urls.filter { $0.pathExtension.lowercased() == "torrent" }
+                guard !torrentFiles.isEmpty else { return false }
+                for url in torrentFiles { if let data = try? Data(contentsOf: url) { Task { await store.addTorrentFile(data: data) } } }
+                return true
+            }
+        }
+        .navigationSplitViewStyle(.balanced)
+        .inspector(isPresented: Binding(get: { store.inspectorTorrentID != nil }, set: { if !$0 { store.closeInspector() } })) {
+            TorrentInspectorView(store: store)
+        }
+        .alert("Drift", isPresented: Binding(get: { store.errorMessage != nil }, set: { if !$0 { store.errorMessage = nil } })) { Button("OK") {} } message: { Text(store.errorMessage ?? "") }
+        .confirmationDialog(pendingDelete.count > 1 ? "Remove \(pendingDelete.count) torrents?" : "Remove torrent?", isPresented: Binding(get: { !pendingDelete.isEmpty }, set: { if !$0 { pendingDelete = [] } })) {
+            let targets = pendingDelete
+            Button("Remove", role: .destructive) { Task { await store.delete(targets, deleteData: false) }; pendingDelete = [] }
+            Button("Remove and Delete Files", role: .destructive) { Task { await store.delete(targets, deleteData: true) }; pendingDelete = [] }
+            Button("Cancel", role: .cancel) { pendingDelete = [] }
+        } message: {
+            Text(pendingDelete.count == 1 ? "\(pendingDelete[0].name) will be removed from Transmission." : "\(pendingDelete.count) torrents will be removed from Transmission.")
+        }
+    }
+}
+
+struct SlowModeButton: View {
+    let session: SessionSettings
+    var store: TorrentStore
+    @Binding var showPopover: Bool
+    var body: some View {
+        Button { Task { await store.toggleSlowMode() } } label: {
+            Image(systemName: "tortoise")
+                .frame(width: 16, height: 16)
+                .foregroundStyle(session.altSpeedEnabled ? Color.white : Color.primary)
+        }
+        .buttonStyle(.bordered)
+        .tint(session.altSpeedEnabled ? .orange : nil)
+        .background(session.altSpeedEnabled ? Color.orange : Color.clear, in: RoundedRectangle(cornerRadius: 6))
+        .help("Slow Mode (alternate speed limits) — right-click to configure")
+        .contextMenu { Button("Configure Speed Limits…") { showPopover = true } }
+        .popover(isPresented: $showPopover) { SlowModePopover(store: store) }
+    }
+}
+
+struct SlowModePopover: View {
+    var store: TorrentStore
+    @State private var enabled = false
+    @State private var down = 0
+    @State private var up = 0
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            Text("Slow Mode").font(.headline)
+            Toggle("Limit speed", isOn: $enabled)
+            LabeledContent("Download KB/s") { TextField("", value: $down, format: .number).textFieldStyle(.roundedBorder).frame(width: 80) }
+            LabeledContent("Upload KB/s") { TextField("", value: $up, format: .number).textFieldStyle(.roundedBorder).frame(width: 80) }
+            HStack { Spacer(); Button("Apply") { Task { await store.updateAltSpeed(enabled: enabled, down: down, up: up) } }.buttonStyle(.borderedProminent) }
+        }
+        .padding(18).frame(width: 260)
+        .onAppear {
+            guard let session = store.session else { return }
+            enabled = session.altSpeedEnabled; down = session.altSpeedDown; up = session.altSpeedUp
+        }
+    }
+}
+
+struct Sidebar: View {
+    var store: TorrentStore
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            HStack { Image(systemName: "arrow.down.circle.fill").font(.title2).foregroundStyle(.blue); Text(verbatim: "Drift").font(.title2.bold()); Spacer(); Circle().fill(store.isConnected ? .green : .orange).frame(width: 8) }.padding(20)
+            Text("SERVER").font(.caption2.monospaced().bold()).foregroundStyle(.secondary).padding(.horizontal, 20).padding(.top, 8)
+            Picker("Server", selection: Binding(get: { store.selectedServerID }, set: { if let id = $0 { store.selectServer(id) } })) { ForEach(store.servers) { server in Text(server.name).tag(Optional(server.id)) } }.labelsHidden().padding(.horizontal, 16).padding(.vertical, 7)
+            Text("TRANSMISSION").font(.caption2.monospaced().bold()).foregroundStyle(.secondary).padding(.horizontal, 20).padding(.top, 12)
+            ForEach(TorrentFilter.allCases) { filter in
+                Button { store.filter = filter } label: {
+                    HStack(spacing: 10) {
+                        Image(systemName: filter.systemImage).frame(width: 16, alignment: .center)
+                        Text(filter.title)
+                        Spacer()
+                    }
+                    .padding(.vertical, 5)
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .foregroundStyle(store.filter == filter ? .primary : .secondary)
+                .padding(.horizontal, 20)
+            }
+            Spacer()
+            HStack { Image(systemName: "server.rack"); VStack(alignment: .leading) { Text(store.isConnected ? "Connected" : "Not connected").font(.callout); if let host = store.selectedServer?.host { Text(host).font(.caption).foregroundStyle(.secondary).lineLimit(1).truncationMode(.middle) } else { Text("Add a server").font(.caption).foregroundStyle(.secondary) } }; Spacer(); SettingsLink { Image(systemName: "gearshape") }.buttonStyle(.plain).help("Manage servers") }.padding(20).background(.quaternary.opacity(0.35))
+        }.frame(minWidth: 220)
+    }
+}
+
+struct OfflineView: View { var store: TorrentStore; var body: some View { VStack(spacing: 16) { Image(systemName: "bolt.horizontal.circle").font(.system(size: 52)).foregroundStyle(.secondary); Text("Connect to Transmission").font(.title2.bold()); Text("Drift needs a Transmission RPC connection to show your downloads.").foregroundStyle(.secondary); HStack { SettingsLink { Label("Connection settings", systemImage: "gearshape") }.buttonStyle(.borderedProminent); Button { Task { await store.refresh() } } label: { Label("Try again", systemImage: "arrow.clockwise") }.buttonStyle(.bordered) } }.frame(maxWidth: .infinity, maxHeight: .infinity).padding(40) } }
+struct EmptyTorrentsView: View { let add: () -> Void; var body: some View { let content = ContentUnavailableView { Label("No torrents yet", systemImage: "tray") } description: { Text("Your Transmission downloads will appear here.") } actions: { Button("Add Magnet Link", action: add).buttonStyle(.borderedProminent) }; return content.frame(maxWidth: .infinity, maxHeight: .infinity) } }
+struct NoSearchResultsView: View { let query: String; var body: some View { ContentUnavailableView.search(text: query).frame(maxWidth: .infinity, maxHeight: .infinity) } }
+struct TorrentRow: View {
+    let torrent: Torrent
+    var style: TorrentRowStyle = .detailed
+    var body: some View {
+        switch style {
+        case .detailed: TorrentRowDetailed(torrent: torrent)
+        case .card: TorrentRowCard(torrent: torrent)
+        }
+    }
+}
+
+/// Mirrors the two-line info format of the native Transmission app: size/progress/ETA above the
+/// bar, peer counts and live speeds below it.
+struct TorrentRowDetailed: View {
+    let torrent: Torrent
+    @State private var animatedProgress: Double = 0
+    var body: some View {
+        HStack(spacing: 14) {
+            ZStack {
+                Circle().fill((torrent.status == .paused ? Color.secondary : (torrent.status == .seeding ? Color.green : Color.blue)).opacity(0.15))
+                Image(systemName: torrent.status == .seeding ? "arrow.up" : torrent.status == .paused ? "pause.fill" : "arrow.down")
+                    .font(.callout.weight(.semibold))
+                    .foregroundStyle(torrent.status == .paused ? Color.secondary : (torrent.status == .seeding ? Color.green : Color.blue))
+            }
+            .frame(width: 32, height: 32)
+            VStack(alignment: .leading, spacing: 4) {
+                Text(torrent.name).font(.system(size: 14, weight: .medium)).lineLimit(1)
+                Text(progressLine).font(.caption).foregroundStyle(.secondary)
+                ProgressView(value: animatedProgress).tint(torrent.status == .seeding ? Color.green : Color.blue)
+                Text(peersLine).font(.caption).foregroundStyle(.secondary)
+            }
+            Spacer(minLength: 12)
+            if animatedProgress >= 1 {
+                Image(systemName: "checkmark.circle.fill").font(.system(size: 16)).foregroundStyle(.secondary)
+            } else {
+                Text(Torrent.percentText(animatedProgress))
+                    .font(.system(size: 13, weight: .medium, design: .rounded)).monospacedDigit()
+                    .foregroundStyle(.secondary)
+                    .padding(.horizontal, 9).padding(.vertical, 5)
+                    .background(.quaternary.opacity(0.4), in: Capsule())
+            }
+        }
+        .padding(.vertical, 6)
+        .onAppear { animatedProgress = torrent.progress }
+        .onChange(of: torrent.progress) { _, newValue in withAnimation(.easeInOut(duration: 0.6)) { animatedProgress = newValue } }
+    }
+    private var progressLine: String {
+        switch torrent.status {
+        case .downloading:
+            let remaining = String(localized: "Remaining")
+            let of = String(localized: "of")
+            return "\(torrent.downloaded) \(of) \(torrent.size) — \(remaining) \(torrent.eta)"
+        case .seeding:
+            let uploadedLabel = String(localized: "uploaded"); let ratioLabel = String(localized: "ratio")
+            return "\(torrent.size), \(uploadedLabel) \(torrent.uploaded) (\(ratioLabel) \(torrent.ratioText))"
+        case .paused:
+            return torrent.size
+        }
+    }
+    private var peersLine: String {
+        switch torrent.status {
+        case .downloading:
+            let from = String(localized: "Downloading from"); let of = String(localized: "of"); let peers = String(localized: "peers")
+            var line = "\(from) \(torrent.peersSendingToUs) \(of) \(torrent.peersConnected) \(peers)"
+            let downloadLabel = String(localized: "D:"); let uploadLabel = String(localized: "U:")
+            if torrent.speed != "—" { line += " — \(downloadLabel) \(torrent.speed)" }
+            if torrent.uploadSpeed != "—" { line += ", \(uploadLabel) \(torrent.uploadSpeed)" }
+            return line
+        case .seeding:
+            let to = String(localized: "Seeding to"); let of = String(localized: "of"); let peers = String(localized: "peers")
+            var line = "\(to) \(torrent.peersGettingFromUs) \(of) \(torrent.peersConnected) \(peers)"
+            let uploadLabel = String(localized: "U:")
+            if torrent.uploadSpeed != "—" { line += " — \(uploadLabel) \(torrent.uploadSpeed)" }
+            return line
+        case .paused:
+            return String(localized: "Paused")
+        }
+    }
+}
+
+/// A card-style row with more breathing room, for users who prefer a lighter, less data-dense list.
+struct TorrentRowCard: View {
+    let torrent: Torrent
+    @State private var animatedProgress: Double = 0
+    var body: some View {
+        HStack(spacing: 16) {
+            ZStack {
+                Circle().stroke(Color.secondary.opacity(0.2), lineWidth: 4)
+                Circle().trim(from: 0, to: animatedProgress).stroke(torrent.status == .seeding ? Color.green : Color.blue, style: StrokeStyle(lineWidth: 4, lineCap: .round)).rotationEffect(.degrees(-90))
+                Image(systemName: torrent.status == .seeding ? "arrow.up" : torrent.status == .paused ? "pause.fill" : "arrow.down").font(.caption.bold()).foregroundStyle(torrent.status == .paused ? Color.secondary : Color.primary)
+            }
+            .frame(width: 34, height: 34)
+            VStack(alignment: .leading, spacing: 4) {
+                Text(torrent.name).font(.body.weight(.semibold))
+                HStack { Text(torrent.status.title); Text(verbatim: "·"); Text(torrent.size); Text(verbatim: "·"); Text(torrent.speed) }.font(.caption).foregroundStyle(.secondary)
+            }
+            Spacer()
+            Text(Torrent.percentText(animatedProgress)).font(.title3.monospacedDigit().weight(.medium)).foregroundStyle(.secondary)
+        }
+        .padding(14)
+        .background(.quaternary.opacity(0.25), in: RoundedRectangle(cornerRadius: 14))
+        .padding(.vertical, 4)
+        .onAppear { animatedProgress = torrent.progress }
+        .onChange(of: torrent.progress) { _, newValue in withAnimation(.easeInOut(duration: 0.6)) { animatedProgress = newValue } }
+    }
+}
+
+/// Mirrors the native Transmission.app list row: a file icon, a thin progress bar, and a terse status line.
+struct TorrentRowNative: View {
+    let torrent: Torrent
+    @State private var animatedProgress: Double = 0
+    var body: some View {
+        HStack(alignment: .top, spacing: 10) {
+            Image(systemName: "folder.fill").font(.title2).foregroundStyle(.blue.opacity(torrent.status == .paused ? 0.5 : 1))
+            VStack(alignment: .leading, spacing: 3) {
+                Text(torrent.name).font(.system(size: 13, weight: .regular)).lineLimit(1)
+                Text(statusLine).font(.system(size: 11)).foregroundStyle(.secondary)
+                ProgressView(value: animatedProgress).tint(torrent.status == .seeding ? Color.green : Color.blue).scaleEffect(x: 1, y: 0.7, anchor: .center)
+                Text(activityLine).font(.system(size: 11)).foregroundStyle(.secondary)
+            }
+        }
+        .padding(.vertical, 6)
+        .onAppear { animatedProgress = torrent.progress }
+        .onChange(of: torrent.progress) { _, newValue in withAnimation(.easeInOut(duration: 0.6)) { animatedProgress = newValue } }
+    }
+    private var statusLine: String {
+        guard torrent.status == .seeding else { return torrent.size }
+        let uploaded = String(localized: "Uploaded"); let ratio = String(localized: "Ratio")
+        return "\(torrent.size) · \(uploaded) \(torrent.uploaded) · \(ratio) \(torrent.ratioText)"
+    }
+    private var activityLine: String {
+        switch torrent.status {
+        case .seeding: "\(String(localized: "Seeding")) — ↑ \(torrent.speed)"
+        case .downloading: "\(String(localized: "Downloading")) — ↓ \(torrent.speed)"
+        case .paused: String(localized: "Paused")
+        }
+    }
+}
+
+struct AddTorrentView: View {
+    @Environment(\.dismiss) private var dismiss
+    @State private var link = ""
+    @State private var isTargeted = false
+    @State private var showFileImporter = false
+    let onAddMagnet: (String) -> Void
+    let onAddFile: (Data) -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 18) {
+            Text("Add Torrent").font(.title2.bold())
+            TextField("Magnet link or torrent URL", text: $link).textFieldStyle(.roundedBorder)
+            VStack(spacing: 8) {
+                Image(systemName: "arrow.down.doc").font(.title).foregroundStyle(.secondary)
+                Text("Drop a .torrent file here").font(.callout).foregroundStyle(.secondary)
+                Button("Choose File…") { showFileImporter = true }.buttonStyle(.bordered)
+            }
+            .frame(maxWidth: .infinity).padding(.vertical, 20)
+            .background(isTargeted ? Color.accentColor.opacity(0.12) : Color.secondary.opacity(0.06), in: RoundedRectangle(cornerRadius: 10))
+            .overlay(RoundedRectangle(cornerRadius: 10).strokeBorder(isTargeted ? Color.accentColor : Color.secondary.opacity(0.3), style: StrokeStyle(lineWidth: 1, dash: [5])))
+            .dropDestination(for: URL.self) { urls, _ in
+                guard let url = urls.first(where: { $0.pathExtension.lowercased() == "torrent" }), let data = try? Data(contentsOf: url) else { return false }
+                onAddFile(data); dismiss(); return true
+            } isTargeted: { isTargeted = $0 }
+            HStack { Spacer(); Button("Cancel") { dismiss() }; Button("Add") { onAddMagnet(link); dismiss() }.buttonStyle(.borderedProminent).disabled(link.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty) }
+        }
+        .padding(24).frame(width: 480)
+        .fileImporter(isPresented: $showFileImporter, allowedContentTypes: [UTType(filenameExtension: "torrent") ?? .data]) { result in
+            if case .success(let url) = result, let data = try? Data(contentsOf: url) { onAddFile(data); dismiss() }
+        }
+    }
+}
+
+struct ServersTab: View {
+    var store: TorrentStore
+    var body: some View {
+        HStack(spacing: 0) {
+            VStack(alignment: .leading, spacing: 12) {
+                Text("SERVERS").font(.caption2.monospaced().bold()).foregroundStyle(.secondary)
+                ForEach(store.servers) { server in
+                    Button { store.selectServer(server.id) } label: {
+                        HStack(spacing: 10) { Image(systemName: "server.rack").foregroundStyle(server.id == store.selectedServerID ? .blue : .secondary); VStack(alignment: .leading, spacing: 2) { Text(server.name).lineLimit(1); Text(server.host).font(.caption).foregroundStyle(.secondary).lineLimit(1).truncationMode(.middle) }; Spacer(); if server.id == store.selectedServerID { Image(systemName: "checkmark").font(.caption.bold()).foregroundStyle(.blue) } }
+                    }.buttonStyle(.plain).padding(9).background(server.id == store.selectedServerID ? Color.accentColor.opacity(0.12) : .clear, in: RoundedRectangle(cornerRadius: 8))
+                }
+                Spacer()
+                Button { store.addServer() } label: { Label("Add Server", systemImage: "plus") }.buttonStyle(.bordered)
+            }.padding(18).frame(width: 240).background(.quaternary.opacity(0.35))
+            Divider()
+            VStack(alignment: .leading, spacing: 18) {
+                if let selected = store.selectedServer { ServerEditor(server: selected, store: store) }
+                Spacer()
+                ConnectionGuide()
+            }.padding(28).frame(width: 430)
+        }.frame(width: 670, height: 490)
+    }
+}
+
+struct ServerEditor: View {
+    var server: ServerProfile
+    var store: TorrentStore
+    @State private var name = ""; @State private var host = ""; @State private var port = ""; @State private var username = ""; @State private var password = ""
+    var body: some View { VStack(alignment: .leading, spacing: 16) { VStack(alignment: .leading, spacing: 4) { Text("Connection").font(.title2.bold()); Text("Connect Drift to a Transmission RPC server.").foregroundStyle(.secondary) }; LabeledField(title: "Name", text: $name, placeholder: "Home server"); HStack(spacing: 10) { LabeledField(title: "Host", text: $host, placeholder: "192.168.100.15"); LabeledField(title: "Port", text: $port, placeholder: "9091").frame(width: 90) }; LabeledField(title: "Username", text: $username, placeholder: "Optional"); VStack(alignment: .leading, spacing: 6) { Text("Password").font(.caption).foregroundStyle(.secondary); SecureField("Optional", text: $password).textFieldStyle(.roundedBorder) }; HStack { Spacer(); Button("Save & Test") { store.updateServer(ServerProfile(id: server.id, name: name, host: host, port: port, username: username, password: password)); store.selectServer(server.id); Task { await store.refresh() } }.buttonStyle(.borderedProminent) } }.onAppear { name = server.name; host = server.host; port = server.port; username = server.username; password = server.password } }
+}
+struct LabeledField: View { let title: LocalizedStringKey; @Binding var text: String; let placeholder: LocalizedStringKey; var body: some View { VStack(alignment: .leading, spacing: 6) { Text(title).font(.caption).foregroundStyle(.secondary); TextField(placeholder, text: $text).textFieldStyle(.roundedBorder) } } }
+struct ConnectionGuide: View { var body: some View { VStack(alignment: .leading, spacing: 8) { Text("Quick setup").font(.headline); Text("In Transmission, open Settings → Remote and enable remote access. Use the server IP and RPC port above.").font(.caption).foregroundStyle(.secondary); Link("Read the RPC guide ↗", destination: URL(string: "https://github.com/transmission/transmission/blob/main/docs/rpc-spec.md")!).font(.caption) }.padding(14).background(.quaternary.opacity(0.5), in: RoundedRectangle(cornerRadius: 12)) } }
+

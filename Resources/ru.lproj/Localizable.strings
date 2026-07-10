@@ -1,0 +1,165 @@
+/* Toolbar & main window */
+"Connect" = "Подключиться";
+"Add Torrent" = "Добавить торрент";
+"Connecting to Transmission…" = "Подключение к Transmission…";
+"Search torrents" = "Поиск торрентов";
+"Drift" = "Drift";
+"OK" = "OK";
+
+/* Torrent actions */
+"Resume" = "Продолжить";
+"Pause" = "Пауза";
+"Remove Torrent…" = "Удалить торрент…";
+"Remove torrent?" = "Удалить торрент?";
+"Remove" = "Удалить";
+"Remove and Delete Files" = "Удалить вместе с файлами";
+"Cancel" = "Отмена";
+"%@ will be removed from Transmission." = "«%@» будет удалён из Transmission.";
+
+/* Sidebar */
+"SERVER" = "СЕРВЕР";
+"Server" = "Сервер";
+"TRANSMISSION" = "TRANSMISSION";
+"Connected" = "Подключено";
+"Not connected" = "Нет подключения";
+"Add a server" = "Добавьте сервер";
+"Manage servers" = "Управление серверами";
+
+/* Filters */
+"All" = "Все";
+"Downloading" = "Загружается";
+"Seeding" = "Раздаётся";
+"Paused" = "На паузе";
+
+/* Offline state */
+"Connect to Transmission" = "Подключитесь к Transmission";
+"Drift needs a Transmission RPC connection to show your downloads." = "Drift нужно RPC-подключение к Transmission, чтобы показать ваши загрузки.";
+"Connection settings" = "Настройки подключения";
+"Try again" = "Повторить";
+
+/* Empty state */
+"No torrents yet" = "Пока нет торрентов";
+"Your Transmission downloads will appear here." = "Ваши загрузки из Transmission появятся здесь.";
+"Add Magnet Link" = "Добавить magnet-ссылку";
+
+/* Add torrent sheet */
+"Magnet link or torrent URL" = "Magnet-ссылка или URL торрента";
+"Drop a .torrent file here" = "Перетащите сюда файл .torrent";
+"Choose File…" = "Выбрать файл…";
+"Add" = "Добавить";
+
+/* Menu commands */
+"Add Torrent…" = "Добавить торрент…";
+"Select All Torrents" = "Выбрать все торренты";
+"Deselect All" = "Снять выделение";
+"Torrent" = "Торрент";
+"Start All" = "Запустить все";
+"Pause All" = "Приостановить все";
+"List Style" = "Вид списка";
+"Detailed" = "Подробный";
+"Compact" = "Компактный";
+"Card" = "Карточки";
+"Transmission-style" = "Как в Transmission";
+
+/* Torrent row */
+"Uploaded" = "Отдано";
+"Ratio" = "Рейтинг";
+"Remaining" = "Осталось";
+"of" = "из";
+"uploaded" = "роздано";
+"ratio" = "рейтинг";
+"Downloading from" = "Скачиваю от";
+"peers" = "пользователей";
+"Connecting to peers…" = "Подключение к пользователям…";
+"Seeding to" = "Раздаю к";
+"Waiting for peers…" = "Ожидание пользователей…";
+"D:" = "С:";
+"U:" = "Р:";
+
+/* Settings */
+"SERVERS" = "СЕРВЕРЫ";
+"Add Server" = "Добавить сервер";
+"Connection" = "Подключение";
+"Connect Drift to a Transmission RPC server." = "Подключите Drift к RPC-серверу Transmission.";
+"Name" = "Название";
+"Home server" = "Домашний сервер";
+"Host" = "Хост";
+"192.168.100.15" = "192.168.100.15";
+"Port" = "Порт";
+"9091" = "9091";
+"Username" = "Имя пользователя";
+"Optional" = "Необязательно";
+"Password" = "Пароль";
+"Save & Test" = "Сохранить и проверить";
+
+/* Connection guide */
+"Quick setup" = "Быстрая настройка";
+"In Transmission, open Settings → Remote and enable remote access. Use the server IP and RPC port above." = "В Transmission откройте «Настройки» → «Удалённый доступ» и включите его. Укажите IP сервера и RPC-порт выше.";
+"Read the RPC guide ↗" = "Документация по RPC ↗";
+
+/* Default server names */
+"New Server" = "Новый сервер";
+"Local Transmission" = "Локальный Transmission";
+
+/* Preferences */
+"General" = "Основные";
+"Speed Limits" = "Ограничения скорости";
+"Servers" = "Серверы";
+"Launch at login" = "Запускать при входе в систему";
+"Keep Drift running after closing the window" = "Не завершать Drift при закрытии окна";
+"Notify when a torrent finishes downloading" = "Уведомлять о завершении загрузки торрента";
+"Connect to a server to manage speed limits." = "Подключитесь к серверу, чтобы управлять ограничениями скорости.";
+"Normal Limits" = "Обычные ограничения";
+"Limit download speed" = "Ограничить скорость загрузки";
+"Limit upload speed" = "Ограничить скорость отдачи";
+"KB/s" = "КБ/с";
+"Slow Mode" = "Медленный режим";
+"Use alternate limits" = "Использовать альтернативные ограничения";
+"Limit speed" = "Ограничить скорость";
+"Configure Speed Limits…" = "Настроить ограничения скорости…";
+"Download KB/s" = "Загрузка, КБ/с";
+"Upload KB/s" = "Отдача, КБ/с";
+"Apply" = "Применить";
+"Download Complete" = "Загрузка завершена";
+"Default App" = "Приложение по умолчанию";
+"Make Drift the default app for magnet links" = "Сделать Drift приложением по умолчанию для magnet-ссылок";
+"Make Drift the default app for .torrent files" = "Сделать Drift приложением по умолчанию для файлов .torrent";
+
+/* Errors */
+"Action failed" = "Не удалось выполнить действие";
+"Could not add torrent" = "Не удалось добавить торрент";
+"Could not add torrent file" = "Не удалось добавить файл торрента";
+"Could not remove torrent" = "Не удалось удалить торрент";
+"Could not update speed limits" = "Не удалось обновить ограничения скорости";
+"Could not update file selection" = "Не удалось изменить выбор файла";
+"Enter a valid server address, for example 192.168.100.15" = "Введите корректный адрес сервера, например 192.168.100.15";
+"Server did not respond. Check the host, port, and that Transmission is running." = "Сервер не ответил. Проверьте хост, порт и что Transmission запущен.";
+"Transmission server is unavailable on the local network. Check that the Mac is reachable and Remote Access is enabled. (network code %lld)" = "Сервер Transmission недоступен в локальной сети. Проверьте, что устройство доступно и удалённый доступ включён. (код сети %lld)";
+"This server requires HTTPS. Use an https:// address." = "Этот сервер требует HTTPS. Используйте адрес https://.";
+"Could not reach the Transmission server (%lld)." = "Не удалось связаться с сервером Transmission (%lld).";
+
+/* Inspector */
+"Get Info" = "Информация";
+"Activity" = "Активность";
+"Trackers" = "Трекеры";
+"Peers" = "Пиры";
+"Files" = "Файлы";
+"Hash" = "Хеш";
+"Private Torrent" = "Приватный торрент";
+"Added" = "Добавлен";
+"Completed" = "Завершён";
+"Comment" = "Комментарий";
+"Yes" = "Да";
+"No" = "Нет";
+"Total Size" = "Общий размер";
+"Downloaded" = "Скачано";
+"Corrupt" = "Повреждено";
+"Download Speed" = "Скорость загрузки";
+"Upload Speed" = "Скорость отдачи";
+"Connected Peers" = "Подключено пиров";
+"No Trackers" = "Нет трекеров";
+"No Peers Connected" = "Нет подключённых пиров";
+
+/* About */
+"About Drift" = "О приложении Drift";
+"by Ilia Banda" = "Илья Банда";
