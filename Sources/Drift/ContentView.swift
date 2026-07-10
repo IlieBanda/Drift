@@ -148,7 +148,7 @@ struct SlowModePopover: View {
             Toggle("Limit speed", isOn: $enabled)
             LabeledContent("Download KB/s") { TextField("", value: $down, format: .number).textFieldStyle(.roundedBorder).frame(width: 80) }
             LabeledContent("Upload KB/s") { TextField("", value: $up, format: .number).textFieldStyle(.roundedBorder).frame(width: 80) }
-            HStack { Spacer(); Button("Apply") { Task { await store.updateAltSpeed(enabled: enabled, down: down, up: up) } }.buttonStyle(.borderedProminent) }
+            HStack { Spacer(); Button("Apply") { Task { await store.updateAltSpeed(enabled: enabled, down: down, up: up) } }.buttonStyle(.borderedProminent).keyboardShortcut(.defaultAction) }
         }
         .padding(18).frame(width: 260)
         .onAppear {
@@ -473,7 +473,11 @@ struct AddTorrentView: View {
                 guard let url = urls.first(where: { $0.pathExtension.lowercased() == "torrent" }), let data = try? Data(contentsOf: url) else { return false }
                 onAddFile(data); dismiss(); return true
             } isTargeted: { isTargeted = $0 }
-            HStack { Spacer(); Button("Cancel") { dismiss() }; Button("Add") { onAddMagnet(link); dismiss() }.buttonStyle(.borderedProminent).disabled(link.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty) }
+            HStack {
+                Spacer()
+                Button("Cancel") { dismiss() }.buttonStyle(.bordered).keyboardShortcut(.cancelAction)
+                Button("Add") { onAddMagnet(link); dismiss() }.buttonStyle(.borderedProminent).keyboardShortcut(.defaultAction).disabled(link.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+            }
         }
         .padding(24).frame(width: 480)
         .fileImporter(isPresented: $showFileImporter, allowedContentTypes: [UTType(filenameExtension: "torrent") ?? .data]) { result in
@@ -545,6 +549,7 @@ struct ServerEditor: View {
                     Task { await store.refresh() }
                 }
                 .buttonStyle(.borderedProminent)
+                .keyboardShortcut(.defaultAction)
                 .disabled(!isValid)
             }
         }
