@@ -34,6 +34,8 @@
 "Could not reorder queue" = "Не удалось изменить очередь";
 "Could not change the data location" = "Не удалось изменить расположение данных";
 "Could not rename torrent" = "Не удалось переименовать торрент";
+"Copy Magnet Link" = "Скопировать магнет-ссылку";
+"Could not copy magnet link" = "Не удалось скопировать магнет-ссылку";
 
 /* Sidebar */
 "SERVER" = "СЕРВЕР";

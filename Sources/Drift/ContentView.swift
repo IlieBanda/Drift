@@ -54,6 +54,9 @@ struct ContentView: View {
                                     Button(allPaused ? "Resume" : "Pause", systemImage: allPaused ? "play.fill" : "pause.fill") { Task { await store.toggle(targets) } }
                                     Button("Ask Tracker for More Peers", systemImage: "arrow.triangle.2.circlepath") { Task { await store.reannounce(targets) } }
                                     Button("Verify Local Data", systemImage: "checkmark.shield") { Task { await store.verify(targets) } }
+                                    if targets.count == 1 {
+                                        Button("Copy Magnet Link", systemImage: "link") { Task { await store.copyMagnetLink(for: torrent) } }
+                                    }
                                     Divider()
                                     Menu("Queue") {
                                         Button("Move to Top", systemImage: "arrow.up.to.line") { Task { await store.moveInQueue(targets, .top) } }

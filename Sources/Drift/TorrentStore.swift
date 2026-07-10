@@ -231,6 +231,13 @@ final class TorrentStore {
         guard !torrents.isEmpty, !location.isEmpty else { return }
         do { try await client.setLocation(ids: torrents.map(\.id), location: location, move: move); await refresh(silently: true) } catch { errorMessage = String(localized: "Could not change the data location") }
     }
+    func copyMagnetLink(for torrent: Torrent) async {
+        guard let detail = try? await client.getTorrentDetail(id: torrent.id) else { errorMessage = String(localized: "Could not copy magnet link"); return }
+        let name = torrent.name.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? torrent.name
+        let magnet = "magnet:?xt=urn:btih:\(detail.hashString)&dn=\(name)"
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(magnet, forType: .string)
+    }
     func rename(_ torrent: Torrent, to newName: String) async {
         let newName = newName.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !newName.isEmpty, newName != torrent.name else { return }
