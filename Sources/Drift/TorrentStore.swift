@@ -215,5 +215,42 @@ final class TorrentStore {
         guard let inspectorTorrentID else { return }
         do { try await client.setFilePriority(id: inspectorTorrentID, indices: [fileIndex], priority: priority); await loadInspectorDetail() } catch { errorMessage = String(localized: "Could not update file selection") }
     }
+    func verify(_ torrents: [Torrent]) async {
+        guard !torrents.isEmpty else { return }
+        do { try await client.send("torrent-verify", ids: torrents.map(\.id)); await refresh(silently: true) } catch { errorMessage = String(localized: "Could not verify torrent data") }
+    }
+    func reannounce(_ torrents: [Torrent]) async {
+        guard !torrents.isEmpty else { return }
+        do { try await client.send("torrent-reannounce", ids: torrents.map(\.id)); await refresh(silently: true) } catch { errorMessage = String(localized: "Could not reach the tracker") }
+    }
+    func moveInQueue(_ torrents: [Torrent], _ direction: QueueDirection) async {
+        guard !torrents.isEmpty else { return }
+        do { try await client.send(direction.rpcMethod, ids: torrents.map(\.id)); await refresh(silently: true) } catch { errorMessage = String(localized: "Could not reorder queue") }
+    }
+    func setLocation(_ torrents: [Torrent], location: String, move: Bool) async {
+        guard !torrents.isEmpty, !location.isEmpty else { return }
+        do { try await client.setLocation(ids: torrents.map(\.id), location: location, move: move); await refresh(silently: true) } catch { errorMessage = String(localized: "Could not change the data location") }
+    }
+    func rename(_ torrent: Torrent, to newName: String) async {
+        let newName = newName.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !newName.isEmpty, newName != torrent.name else { return }
+        do {
+            try await client.renamePath(id: torrent.id, path: torrent.name, name: newName)
+            await refresh(silently: true)
+            if inspectorTorrentID == torrent.id { await loadInspectorDetail() }
+        } catch { errorMessage = String(localized: "Could not rename torrent") }
+    }
+}
+
+enum QueueDirection {
+    case top, up, down, bottom
+    var rpcMethod: String {
+        switch self {
+        case .top: "queue-move-top"
+        case .up: "queue-move-up"
+        case .down: "queue-move-down"
+        case .bottom: "queue-move-bottom"
+        }
+    }
 }
 

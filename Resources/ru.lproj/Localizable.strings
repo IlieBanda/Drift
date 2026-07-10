@@ -15,6 +15,25 @@
 "Remove and Delete Files" = "Удалить вместе с файлами";
 "Cancel" = "Отмена";
 "%@ will be removed from Transmission." = "«%@» будет удалён из Transmission.";
+"Ask Tracker for More Peers" = "Запросить у трекера пиров";
+"Verify Local Data" = "Проверить данные";
+"Queue" = "Очередь";
+"Move to Top" = "В начало очереди";
+"Move Up" = "Поднять";
+"Move Down" = "Опустить";
+"Move to Bottom" = "В конец очереди";
+"Rename…" = "Переименовать…";
+"Set Location…" = "Изменить расположение…";
+"Rename Torrent" = "Переименование торрента";
+"Name" = "Название";
+"Rename" = "Переименовать";
+"Set Location" = "Изменить расположение";
+"Move data from the current location" = "Переместить данные из текущего расположения";
+"Could not verify torrent data" = "Не удалось проверить данные торрента";
+"Could not reach the tracker" = "Не удалось связаться с трекером";
+"Could not reorder queue" = "Не удалось изменить очередь";
+"Could not change the data location" = "Не удалось изменить расположение данных";
+"Could not rename torrent" = "Не удалось переименовать торрент";
 
 /* Sidebar */
 "SERVER" = "СЕРВЕР";

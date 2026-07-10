@@ -17,6 +17,8 @@ struct ContentView: View {
     var store: TorrentStore
     @State private var pendingDelete: [Torrent] = []
     @State private var showSlowModePopover = false
+    @State private var renamingTorrent: Torrent?
+    @State private var locationTargets: [Torrent] = []
 
     /// Right-clicking a row outside the current selection acts on that row alone, as in Finder.
     private func actionTargets(for torrent: Torrent) -> [Torrent] {
@@ -50,6 +52,20 @@ struct ContentView: View {
                                     let targets = actionTargets(for: torrent)
                                     let allPaused = targets.allSatisfy { $0.status == .paused }
                                     Button(allPaused ? "Resume" : "Pause", systemImage: allPaused ? "play.fill" : "pause.fill") { Task { await store.toggle(targets) } }
+                                    Button("Ask Tracker for More Peers", systemImage: "arrow.triangle.2.circlepath") { Task { await store.reannounce(targets) } }
+                                    Button("Verify Local Data", systemImage: "checkmark.shield") { Task { await store.verify(targets) } }
+                                    Divider()
+                                    Menu("Queue") {
+                                        Button("Move to Top", systemImage: "arrow.up.to.line") { Task { await store.moveInQueue(targets, .top) } }
+                                        Button("Move Up", systemImage: "chevron.up") { Task { await store.moveInQueue(targets, .up) } }
+                                        Button("Move Down", systemImage: "chevron.down") { Task { await store.moveInQueue(targets, .down) } }
+                                        Button("Move to Bottom", systemImage: "arrow.down.to.line") { Task { await store.moveInQueue(targets, .bottom) } }
+                                    }
+                                    Divider()
+                                    if targets.count == 1 {
+                                        Button("Rename…", systemImage: "pencil") { renamingTorrent = torrent }
+                                    }
+                                    Button("Set Location…", systemImage: "folder") { locationTargets = targets }
                                     Divider()
                                     Button("Get Info", systemImage: "info.circle") { if store.inspectorTorrentID == torrent.id { store.closeInspector() } else { store.openInspector(for: torrent.id) } }
                                     Divider()
@@ -71,6 +87,12 @@ struct ContentView: View {
             .searchable(text: Bindable(store).search, placement: .toolbar, prompt: "Search torrents")
             .sheet(isPresented: Bindable(store).showAddSheet) {
                 AddTorrentView(onAddMagnet: { magnet in Task { await store.add(magnet) } }, onAddFile: { data in Task { await store.addTorrentFile(data: data) } })
+            }
+            .sheet(item: $renamingTorrent) { torrent in
+                RenameTorrentSheet(torrent: torrent) { newName in Task { await store.rename(torrent, to: newName) } }
+            }
+            .sheet(isPresented: Binding(get: { !locationTargets.isEmpty }, set: { if !$0 { locationTargets = [] } })) {
+                SetLocationSheet(torrents: locationTargets) { location, move in Task { await store.setLocation(locationTargets, location: location, move: move) } }
             }
             .dropDestination(for: URL.self) { urls, _ in
                 let torrentFiles = urls.filter { $0.pathExtension.lowercased() == "torrent" }
@@ -501,6 +523,58 @@ struct AddTorrentView: View {
         .fileImporter(isPresented: $showFileImporter, allowedContentTypes: [UTType(filenameExtension: "torrent") ?? .data]) { result in
             if case .success(let url) = result, let data = try? Data(contentsOf: url) { onAddFile(data); dismiss() }
         }
+    }
+}
+
+struct RenameTorrentSheet: View {
+    @Environment(\.dismiss) private var dismiss
+    let torrent: Torrent
+    @State private var name: String
+    let onRename: (String) -> Void
+
+    init(torrent: Torrent, onRename: @escaping (String) -> Void) {
+        self.torrent = torrent
+        self._name = State(initialValue: torrent.name)
+        self.onRename = onRename
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 18) {
+            Text("Rename Torrent").font(.title2.bold())
+            TextField("Name", text: $name).textFieldStyle(.roundedBorder)
+            HStack {
+                Spacer()
+                Button("Cancel") { dismiss() }.buttonStyle(.bordered).keyboardShortcut(.cancelAction)
+                Button("Rename") { onRename(name); dismiss() }.buttonStyle(.borderedProminent).keyboardShortcut(.defaultAction)
+                    .disabled(name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+            }
+        }
+        .padding(24).frame(width: 420)
+    }
+}
+
+struct SetLocationSheet: View {
+    @Environment(\.dismiss) private var dismiss
+    let torrents: [Torrent]
+    @State private var location = ""
+    @State private var moveData = true
+    let onSet: (String, Bool) -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 18) {
+            Text("Set Location").font(.title2.bold())
+            Text(torrents.count > 1 ? "New download folder for \(torrents.count) torrents, on the Transmission server." : "New download folder for \"\(torrents.first?.name ?? "")\", on the Transmission server.")
+                .font(.caption).foregroundStyle(.secondary)
+            TextField("/path/on/server", text: $location).textFieldStyle(.roundedBorder)
+            Toggle("Move data from the current location", isOn: $moveData)
+            HStack {
+                Spacer()
+                Button("Cancel") { dismiss() }.buttonStyle(.bordered).keyboardShortcut(.cancelAction)
+                Button("Set Location") { onSet(location, moveData); dismiss() }.buttonStyle(.borderedProminent).keyboardShortcut(.defaultAction)
+                    .disabled(location.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+            }
+        }
+        .padding(24).frame(width: 460)
     }
 }
 

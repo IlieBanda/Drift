@@ -116,6 +116,14 @@ final class TransmissionClient {
         _ = try await request(method: "torrent-set", arguments: ["ids": [id], priority.rpcKey: indices]) as RPCResponse
     }
 
+    func setLocation(ids: [Int], location: String, move: Bool) async throws {
+        _ = try await request(method: "torrent-set-location", arguments: ["ids": ids, "location": location, "move": move]) as RPCResponse
+    }
+
+    func renamePath(id: Int, path: String, name: String) async throws {
+        _ = try await request(method: "torrent-rename-path", arguments: ["ids": [id], "path": path, "name": name]) as RPCResponse
+    }
+
     private func request<T: Decodable>(method: String, arguments: [String: Any]) async throws -> T {
         for attempt in 0...1 {
             let (data, response) = try await performRequest(method: method, arguments: arguments)

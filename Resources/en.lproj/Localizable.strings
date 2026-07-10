@@ -15,6 +15,25 @@
 "Remove and Delete Files" = "Remove and Delete Files";
 "Cancel" = "Cancel";
 "%@ will be removed from Transmission." = "“%@” will be removed from Transmission.";
+"Ask Tracker for More Peers" = "Ask Tracker for More Peers";
+"Verify Local Data" = "Verify Local Data";
+"Queue" = "Queue";
+"Move to Top" = "Move to Top";
+"Move Up" = "Move Up";
+"Move Down" = "Move Down";
+"Move to Bottom" = "Move to Bottom";
+"Rename…" = "Rename…";
+"Set Location…" = "Set Location…";
+"Rename Torrent" = "Rename Torrent";
+"Name" = "Name";
+"Rename" = "Rename";
+"Set Location" = "Set Location";
+"Move data from the current location" = "Move data from the current location";
+"Could not verify torrent data" = "Could not verify torrent data";
+"Could not reach the tracker" = "Could not reach the tracker";
+"Could not reorder queue" = "Could not reorder queue";
+"Could not change the data location" = "Could not change the data location";
+"Could not rename torrent" = "Could not rename torrent";
 
 /* Sidebar */
 "SERVER" = "SERVER";
