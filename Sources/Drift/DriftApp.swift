@@ -70,17 +70,9 @@ struct DriftApp: App {
         let paragraph = NSMutableParagraphStyle()
         paragraph.alignment = .center
         let credits = NSMutableAttributedString(
-            string: String(localized: "by Ilia Banda") + "\n",
+            string: String(localized: "by Ilia Banda"),
             attributes: [.font: NSFont.systemFont(ofSize: 11), .paragraphStyle: paragraph]
         )
-        credits.append(NSAttributedString(
-            string: "GitHub",
-            attributes: [
-                .font: NSFont.systemFont(ofSize: 11),
-                .paragraphStyle: paragraph,
-                .link: URL(string: "https://github.com/IlieBanda/Drift")!
-            ]
-        ))
         NSApplication.shared.orderFrontStandardAboutPanel(options: [
             .credits: credits,
             .applicationName: "Drift",
