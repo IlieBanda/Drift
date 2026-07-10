@@ -170,7 +170,7 @@ final class TorrentStore {
             await loadSession()
         } catch { errorMessage = String(localized: "Could not update speed limits") }
     }
-    private func friendly(_ error: Error) -> String {
+    func friendly(_ error: Error) -> String {
         let nsError = error as NSError
         guard nsError.domain == NSURLErrorDomain else { return String(localized: "Could not reach the Transmission server.") }
         let code = URLError.Code(rawValue: nsError.code)

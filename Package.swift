@@ -5,5 +5,8 @@ let package = Package(
     name: "Drift",
     platforms: [.macOS(.v14)],
     products: [.executable(name: "Drift", targets: ["Drift"])],
-    targets: [.executableTarget(name: "Drift", path: "Sources/Drift")]
+    targets: [
+        .executableTarget(name: "Drift", path: "Sources/Drift"),
+        .testTarget(name: "DriftTests", dependencies: ["Drift"], path: "Tests/DriftTests")
+    ]
 )
