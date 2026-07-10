@@ -2,7 +2,7 @@
 
 A native macOS remote GUI for [Transmission](https://transmissionbt.com/), built with SwiftUI.
 
-There wasn't a good native Mac remote client for Transmission, so this is an attempt at one: real-time updates, multi-select, speed limits with a Slow Mode toggle, a torrent inspector (trackers, peers, files), magnet-link/`.torrent` handling, and English/Russian localization.
+Most existing Transmission remotes for Mac (Transmission Remote GUI, Electorrent, the stock web UI, …) are cross-platform or Electron-based. Drift is a SwiftUI-native alternative built for macOS specifically: real-time updates, multi-select, speed limits with a Slow Mode toggle, a torrent inspector (trackers, peers, files), magnet-link/`.torrent` handling, and English/Russian localization.
 
 ## Requirements
 
