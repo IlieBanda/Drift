@@ -1,6 +1,6 @@
 <div align="center">
 
-# Drift
+<img src="docs/wordmark.png" alt="Drift" height="72">
 
 **A native macOS remote for Transmission.**
 
