@@ -36,6 +36,9 @@
 "Could not rename torrent" = "Не удалось переименовать торрент";
 "Copy Magnet Link" = "Скопировать магнет-ссылку";
 "Could not copy magnet link" = "Не удалось скопировать магнет-ссылку";
+"Remove Server…" = "Удалить сервер…";
+"Remove “%@”?" = "Удалить «%@»?";
+"This removes its saved connection details and password." = "Это удалит сохранённые данные подключения и пароль.";
 
 /* Sidebar */
 "SERVER" = "СЕРВЕР";

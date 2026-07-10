@@ -587,6 +587,7 @@ struct ServersTab: View {
     /// (the actually-connected server). Browsing the list to inspect/edit a different server must
     /// not silently switch the active connection; only "Save" in `ServerEditor` does that.
     @State private var editingServerID: UUID?
+    @State private var pendingDeleteServer: ServerProfile?
     private var editingServer: ServerProfile? { store.servers.first { $0.id == editingServerID } ?? store.selectedServer }
     var body: some View {
         HStack(spacing: 0) {
@@ -599,6 +600,10 @@ struct ServersTab: View {
                         .padding(9)
                         .contentShape(Rectangle())
                     }.buttonStyle(.plain).background(isEditing ? Color.accentColor.opacity(0.12) : .clear, in: RoundedRectangle(cornerRadius: 8))
+                        .contextMenu {
+                            Button("Remove Server…", systemImage: "trash", role: .destructive) { pendingDeleteServer = server }
+                                .disabled(store.servers.count <= 1)
+                        }
                 }
                 Spacer()
                 Button { editingServerID = store.addServer() } label: { Label("Add Server", systemImage: "plus") }.buttonStyle(.bordered)
@@ -610,6 +615,17 @@ struct ServersTab: View {
                 ConnectionGuide()
             }.padding(28).frame(width: 430)
         }.frame(width: 670, height: 490)
+        .confirmationDialog("Remove “\(pendingDeleteServer?.name ?? "")”?", isPresented: Binding(get: { pendingDeleteServer != nil }, set: { if !$0 { pendingDeleteServer = nil } })) {
+            Button("Remove", role: .destructive) {
+                guard let id = pendingDeleteServer?.id else { return }
+                if editingServerID == id { editingServerID = nil }
+                store.deleteServer(id)
+                pendingDeleteServer = nil
+            }
+            Button("Cancel", role: .cancel) { pendingDeleteServer = nil }
+        } message: {
+            Text("This removes its saved connection details and password.")
+        }
     }
 }
 

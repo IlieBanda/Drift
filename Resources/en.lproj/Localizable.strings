@@ -36,6 +36,9 @@
 "Could not rename torrent" = "Could not rename torrent";
 "Copy Magnet Link" = "Copy Magnet Link";
 "Could not copy magnet link" = "Could not copy magnet link";
+"Remove Server…" = "Remove Server…";
+"Remove “%@”?" = "Remove “%@”?";
+"This removes its saved connection details and password." = "This removes its saved connection details and password.";
 
 /* Sidebar */
 "SERVER" = "SERVER";
