@@ -304,6 +304,23 @@ struct SpeedSparkline: View {
     }
 }
 
+/// Replaces `ProgressView(value:).tint()`, whose color is unreliable in light mode on macOS
+/// (AppKit's linear NSProgressIndicator backing ignores the tint under some appearances).
+struct TintedProgressBar: View {
+    let value: Double
+    let tint: Color
+    var height: CGFloat = 6
+    var body: some View {
+        GeometryReader { proxy in
+            ZStack(alignment: .leading) {
+                Capsule().fill(Color.secondary.opacity(0.2))
+                Capsule().fill(tint).frame(width: proxy.size.width * max(0, min(1, value)))
+            }
+        }
+        .frame(height: height)
+    }
+}
+
 struct OfflineView: View { var store: TorrentStore; var body: some View { VStack(spacing: 16) { Image(systemName: "bolt.horizontal.circle").font(.system(size: 52)).foregroundStyle(.secondary); Text("Connect to Transmission").font(.title2.bold()); Text("Drift needs a Transmission RPC connection to show your downloads.").foregroundStyle(.secondary); HStack { SettingsLink { Label("Connection settings", systemImage: "gearshape") }.buttonStyle(.borderedProminent); Button { Task { await store.refresh() } } label: { Label("Try again", systemImage: "arrow.clockwise") }.buttonStyle(.bordered) } }.frame(maxWidth: .infinity, maxHeight: .infinity).padding(40) } }
 struct EmptyTorrentsView: View { let add: () -> Void; var body: some View { let content = ContentUnavailableView { Label("No torrents yet", systemImage: "tray") } description: { Text("Your Transmission downloads will appear here.") } actions: { Button("Add Magnet Link", action: add).buttonStyle(.borderedProminent) }; return content.frame(maxWidth: .infinity, maxHeight: .infinity) } }
 struct NoSearchResultsView: View { let query: String; var body: some View { ContentUnavailableView.search(text: query).frame(maxWidth: .infinity, maxHeight: .infinity) } }
@@ -335,7 +352,7 @@ struct TorrentRowDetailed: View {
             VStack(alignment: .leading, spacing: 3) {
                 Text(torrent.name).font(.system(size: 14, weight: .medium)).lineLimit(1)
                 Text(progressLine).font(.caption).foregroundStyle(.secondary)
-                ProgressView(value: animatedProgress).tint(torrent.status == .seeding ? Color.green : Color.blue)
+                TintedProgressBar(value: animatedProgress, tint: torrent.status == .seeding ? Color.green : Color.blue)
                 if let peersLine {
                     Text(peersLine).font(.caption).foregroundStyle(.secondary)
                 }
@@ -428,7 +445,7 @@ struct TorrentRowNative: View {
             VStack(alignment: .leading, spacing: 3) {
                 Text(torrent.name).font(.system(size: 13, weight: .regular)).lineLimit(1)
                 Text(statusLine).font(.system(size: 11)).foregroundStyle(.secondary)
-                ProgressView(value: animatedProgress).tint(torrent.status == .seeding ? Color.green : Color.blue).scaleEffect(x: 1, y: 0.7, anchor: .center)
+                TintedProgressBar(value: animatedProgress, tint: torrent.status == .seeding ? Color.green : Color.blue, height: 4)
                 Text(activityLine).font(.system(size: 11)).foregroundStyle(.secondary)
             }
         }
