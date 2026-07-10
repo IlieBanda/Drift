@@ -87,6 +87,11 @@ final class TorrentStore {
         servers = servers.map { server in var s = server; s.password = KeychainHelper.readPassword(forServerID: server.id); return s }
         selectedServerID = UUID(uuidString: defaults.string(forKey: "selectedServerID") ?? "") ?? servers.first?.id
         if let selected = selectedServer { apply(selected) }
+        // Legacy plaintext RPC credentials have now been migrated into the Keychain above;
+        // remove the whole old suite so they don't linger on disk.
+        if let previous {
+            for key in previous.dictionaryRepresentation().keys { previous.removeObject(forKey: key) }
+        }
     }
     var selectedServer: ServerProfile? { servers.first { $0.id == selectedServerID } }
     func selectServer(_ id: UUID) { selectedServerID = id; UserDefaults.standard.set(id.uuidString, forKey: "selectedServerID"); session = nil; freeSpace = nil; speedHistory = []; if let server = selectedServer { apply(server); Task { await refresh() } } }
