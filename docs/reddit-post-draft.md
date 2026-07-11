@@ -1,11 +1,10 @@
 <!-- Draft only — not posted. For r/macapps or similar. -->
 
-**Title:** Drift — a native SwiftUI remote for Transmission (no Electron)
+**Title:** Drift — a native SwiftUI remote for Transmission
 
-Most Transmission remotes for Mac (Transmission Remote GUI, Electorrent, the stock web UI) are
-cross-platform or Electron-based. I wanted something that actually feels like part of macOS, so I
-built Drift: SwiftUI, a real native toolbar, Liquid Glass on macOS 26+, colored sidebar icons —
-no Chromium tab hiding in your Dock.
+I wanted a Transmission remote that actually feels like part of macOS — SwiftUI throughout, a real
+native toolbar, Liquid Glass on macOS 26+ (falls back gracefully on 14–25), colored sidebar icons.
+So I built Drift.
 
 **What it does:**
 - Real-time torrent list with multi-select, drag-and-drop `.torrent` files, add via magnet
@@ -20,9 +19,13 @@ no Chromium tab hiding in your Dock.
 - English and Russian localization
 
 **Security:** credentials live in the Keychain (never plaintext), the app is sandboxed with
-Hardened Runtime, and network access is scoped to your local network only.
+Hardened Runtime, and network access is scoped to your local network only. Transmission's RPC
+traffic is plain HTTP by default (matching Transmission itself) — if your daemon is reachable from
+outside your LAN, put it behind HTTPS or a VPN, since Drift doesn't encrypt that traffic itself.
 
-It's free, open source (MIT), and on GitHub. Not notarized yet (no paid Developer account behind
-it currently) — first launch needs a one-time right-click-Open, documented in the README.
+It's free, open source (MIT), and on GitHub. **One heads-up:** it's not notarized yet (that needs a
+paid Apple Developer account I don't have yet), so macOS will flag it as unverified on first
+launch. Right-click the app → Open → Open once and it's remembered after that — full steps are
+right near the top of the README.
 
-Feedback welcome, especially on anything that feels "not quite native."
+Feedback welcome, especially anything that feels off or not-quite-native.

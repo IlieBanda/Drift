@@ -347,7 +347,25 @@ struct TintedProgressBar: View {
     }
 }
 
-struct OfflineView: View { var store: TorrentStore; var body: some View { VStack(spacing: 16) { Image(systemName: "bolt.horizontal.circle").font(.system(size: 52)).foregroundStyle(.secondary); Text("Connect to Transmission").font(.title2.bold()); Text("Drift needs a Transmission RPC connection to show your downloads.").foregroundStyle(.secondary); HStack { SettingsLink { Label("Connection settings", systemImage: "gearshape") }.buttonStyle(.borderedProminent); Button { Task { await store.refresh() } } label: { Label("Try again", systemImage: "arrow.clockwise") }.buttonStyle(.bordered) } }.frame(maxWidth: .infinity, maxHeight: .infinity).padding(40) } }
+struct OfflineView: View {
+    var store: TorrentStore
+    var body: some View {
+        VStack(spacing: 16) {
+            Image(systemName: store.isUsingDefaultLocalProfile ? "server.rack" : "bolt.horizontal.circle").font(.system(size: 52)).foregroundStyle(.secondary)
+            Text(store.isUsingDefaultLocalProfile ? "Add Your Transmission Server" : "Connect to Transmission").font(.title2.bold())
+            Text(store.isUsingDefaultLocalProfile
+                 ? "Drift is looking for Transmission on this Mac. If it's running elsewhere — a NAS, a home server, a seedbox — add its address to connect."
+                 : "Drift needs a Transmission RPC connection to show your downloads.")
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+                .frame(maxWidth: 360)
+            HStack {
+                SettingsLink { Label(store.isUsingDefaultLocalProfile ? "Add Server" : "Connection settings", systemImage: store.isUsingDefaultLocalProfile ? "plus" : "gearshape") }.buttonStyle(.borderedProminent)
+                Button { Task { await store.refresh() } } label: { Label("Try again", systemImage: "arrow.clockwise") }.buttonStyle(.bordered)
+            }
+        }.frame(maxWidth: .infinity, maxHeight: .infinity).padding(40)
+    }
+}
 struct EmptyTorrentsView: View { let add: () -> Void; var body: some View { let content = ContentUnavailableView { Label("No torrents yet", systemImage: "tray") } description: { Text("Your Transmission downloads will appear here.") } actions: { Button("Add Magnet Link", action: add).buttonStyle(.borderedProminent) }; return content.frame(maxWidth: .infinity, maxHeight: .infinity) } }
 struct NoSearchResultsView: View { let query: String; var body: some View { ContentUnavailableView.search(text: query).frame(maxWidth: .infinity, maxHeight: .infinity) } }
 struct TorrentRow: View {

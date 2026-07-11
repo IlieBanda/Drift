@@ -94,6 +94,12 @@ final class TorrentStore {
         }
     }
     var selectedServer: ServerProfile? { servers.first { $0.id == selectedServerID } }
+    /// True only for a brand-new install that's never had a real server configured — the
+    /// untouched "Local Transmission"/localhost placeholder created by `loadSavedConnection()`.
+    /// Lets the offline screen say "add your server" instead of a generic connection error.
+    var isUsingDefaultLocalProfile: Bool {
+        servers.count == 1 && selectedServer?.host == "localhost" && selectedServer?.name == String(localized: "Local Transmission")
+    }
     func selectServer(_ id: UUID) { selectedServerID = id; UserDefaults.standard.set(id.uuidString, forKey: "selectedServerID"); session = nil; freeSpace = nil; speedHistory = []; if let server = selectedServer { apply(server); Task { await refresh() } } }
     /// Adds a new server profile to the list without switching the active connection to it —
     /// only "Save" in the server editor (or explicitly picking it) should do that. Returns its id

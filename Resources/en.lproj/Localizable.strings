@@ -36,6 +36,8 @@
 "Could not rename torrent" = "Could not rename torrent";
 "Copy Magnet Link" = "Copy Magnet Link";
 "Could not copy magnet link" = "Could not copy magnet link";
+"Add Your Transmission Server" = "Add Your Transmission Server";
+"Drift is looking for Transmission on this Mac. If it's running elsewhere — a NAS, a home server, a seedbox — add its address to connect." = "Drift is looking for Transmission on this Mac. If it's running elsewhere — a NAS, a home server, a seedbox — add its address to connect.";
 "Remove Server…" = "Remove Server…";
 "Remove “%@”?" = "Remove “%@”?";
 "This removes its saved connection details and password." = "This removes its saved connection details and password.";

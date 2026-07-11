@@ -25,6 +25,9 @@ looks like it belongs on your Mac — because it's built for nothing else.
   <img src="docs/screenshot-add-torrent.png" alt="Adding a torrent in Drift" width="345">
 </p>
 
+> **Downloading a prebuilt copy?** Drift isn't notarized yet, so macOS will flag it as
+> unverified on first launch. This is expected — see [Installing a downloaded build](#installing-a-downloaded-build) below for the one-time fix.
+
 ## Features
 
 **Torrent management**
