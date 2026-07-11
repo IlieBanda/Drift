@@ -1,5 +1,5 @@
 import XCTest
-@testable import Drift
+@testable import Swarm
 
 final class FilePriorityTests: XCTestCase {
     func testRPCKeyMapping() {

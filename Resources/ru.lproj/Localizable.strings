@@ -3,7 +3,7 @@
 "Add Torrent" = "Добавить торрент";
 "Connecting to Transmission…" = "Подключение к Transmission…";
 "Search torrents" = "Поиск торрентов";
-"Drift" = "Drift";
+"Swarm" = "Swarm";
 "OK" = "OK";
 
 /* Torrent actions */
@@ -37,7 +37,7 @@
 "Copy Magnet Link" = "Скопировать магнет-ссылку";
 "Could not copy magnet link" = "Не удалось скопировать магнет-ссылку";
 "Add Your Transmission Server" = "Добавьте сервер Transmission";
-"Drift is looking for Transmission on this Mac. If it's running elsewhere — a NAS, a home server, a seedbox — add its address to connect." = "Drift ищет Transmission на этом Mac. Если он работает где-то ещё — на NAS, домашнем сервере, сидбоксе — добавьте его адрес для подключения.";
+"Swarm is looking for Transmission on this Mac. If it's running elsewhere — a NAS, a home server, a seedbox — add its address to connect." = "Swarm ищет Transmission на этом Mac. Если он работает где-то ещё — на NAS, домашнем сервере, сидбоксе — добавьте его адрес для подключения.";
 "Remove Server…" = "Удалить сервер…";
 "Remove “%@”?" = "Удалить «%@»?";
 "This removes its saved connection details and password." = "Это удалит сохранённые данные подключения и пароль.";
@@ -61,7 +61,7 @@
 
 /* Offline state */
 "Connect to Transmission" = "Подключитесь к Transmission";
-"Drift needs a Transmission RPC connection to show your downloads." = "Drift нужно RPC-подключение к Transmission, чтобы показать ваши загрузки.";
+"Swarm needs a Transmission RPC connection to show your downloads." = "Swarm нужно RPC-подключение к Transmission, чтобы показать ваши загрузки.";
 "Connection settings" = "Настройки подключения";
 "Try again" = "Повторить";
 
@@ -108,7 +108,7 @@
 "SERVERS" = "СЕРВЕРЫ";
 "Add Server" = "Добавить сервер";
 "Connection" = "Подключение";
-"Connect Drift to a Transmission RPC server." = "Подключите Drift к RPC-серверу Transmission.";
+"Connect Swarm to a Transmission RPC server." = "Подключите Swarm к RPC-серверу Transmission.";
 "Name" = "Название";
 "Home server" = "Домашний сервер";
 "Host" = "Хост";
@@ -134,7 +134,7 @@
 "Speed Limits" = "Ограничения скорости";
 "Servers" = "Серверы";
 "Launch at login" = "Запускать при входе в систему";
-"Keep Drift running after closing the window" = "Не завершать Drift при закрытии окна";
+"Keep Swarm running after closing the window" = "Не завершать Swarm при закрытии окна";
 "Notify when a torrent finishes downloading" = "Уведомлять о завершении загрузки торрента";
 "Connect to a server to manage speed limits." = "Подключитесь к серверу, чтобы управлять ограничениями скорости.";
 "Normal Limits" = "Обычные ограничения";
@@ -150,8 +150,8 @@
 "Apply" = "Применить";
 "Download Complete" = "Загрузка завершена";
 "Default App" = "Приложение по умолчанию";
-"Make Drift the default app for magnet links" = "Сделать Drift приложением по умолчанию для magnet-ссылок";
-"Make Drift the default app for .torrent files" = "Сделать Drift приложением по умолчанию для файлов .torrent";
+"Make Swarm the default app for magnet links" = "Сделать Swarm приложением по умолчанию для magnet-ссылок";
+"Make Swarm the default app for .torrent files" = "Сделать Swarm приложением по умолчанию для файлов .torrent";
 
 /* Errors */
 "Action failed" = "Не удалось выполнить действие";
@@ -192,5 +192,5 @@
 "High" = "Высокий";
 
 /* About */
-"About Drift" = "О приложении Drift";
+"About Swarm" = "О приложении Swarm";
 "by Ilia Banda" = "Илья Банда";

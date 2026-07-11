@@ -1,5 +1,5 @@
 import XCTest
-@testable import Drift
+@testable import Swarm
 
 @MainActor
 final class TorrentStoreTests: XCTestCase {

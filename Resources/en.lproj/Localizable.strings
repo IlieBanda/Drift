@@ -3,7 +3,7 @@
 "Add Torrent" = "Add Torrent";
 "Connecting to Transmission…" = "Connecting to Transmission…";
 "Search torrents" = "Search torrents";
-"Drift" = "Drift";
+"Swarm" = "Swarm";
 "OK" = "OK";
 
 /* Torrent actions */
@@ -37,7 +37,7 @@
 "Copy Magnet Link" = "Copy Magnet Link";
 "Could not copy magnet link" = "Could not copy magnet link";
 "Add Your Transmission Server" = "Add Your Transmission Server";
-"Drift is looking for Transmission on this Mac. If it's running elsewhere — a NAS, a home server, a seedbox — add its address to connect." = "Drift is looking for Transmission on this Mac. If it's running elsewhere — a NAS, a home server, a seedbox — add its address to connect.";
+"Swarm is looking for Transmission on this Mac. If it's running elsewhere — a NAS, a home server, a seedbox — add its address to connect." = "Swarm is looking for Transmission on this Mac. If it's running elsewhere — a NAS, a home server, a seedbox — add its address to connect.";
 "Remove Server…" = "Remove Server…";
 "Remove “%@”?" = "Remove “%@”?";
 "This removes its saved connection details and password." = "This removes its saved connection details and password.";
@@ -61,7 +61,7 @@
 
 /* Offline state */
 "Connect to Transmission" = "Connect to Transmission";
-"Drift needs a Transmission RPC connection to show your downloads." = "Drift needs a Transmission RPC connection to show your downloads.";
+"Swarm needs a Transmission RPC connection to show your downloads." = "Swarm needs a Transmission RPC connection to show your downloads.";
 "Connection settings" = "Connection settings";
 "Try again" = "Try again";
 
@@ -108,7 +108,7 @@
 "SERVERS" = "SERVERS";
 "Add Server" = "Add Server";
 "Connection" = "Connection";
-"Connect Drift to a Transmission RPC server." = "Connect Drift to a Transmission RPC server.";
+"Connect Swarm to a Transmission RPC server." = "Connect Swarm to a Transmission RPC server.";
 "Name" = "Name";
 "Home server" = "Home server";
 "Host" = "Host";
@@ -134,7 +134,7 @@
 "Speed Limits" = "Speed Limits";
 "Servers" = "Servers";
 "Launch at login" = "Launch at login";
-"Keep Drift running after closing the window" = "Keep Drift running after closing the window";
+"Keep Swarm running after closing the window" = "Keep Swarm running after closing the window";
 "Notify when a torrent finishes downloading" = "Notify when a torrent finishes downloading";
 "Connect to a server to manage speed limits." = "Connect to a server to manage speed limits.";
 "Normal Limits" = "Normal Limits";
@@ -150,8 +150,8 @@
 "Apply" = "Apply";
 "Download Complete" = "Download Complete";
 "Default App" = "Default App";
-"Make Drift the default app for magnet links" = "Make Drift the default app for magnet links";
-"Make Drift the default app for .torrent files" = "Make Drift the default app for .torrent files";
+"Make Swarm the default app for magnet links" = "Make Swarm the default app for magnet links";
+"Make Swarm the default app for .torrent files" = "Make Swarm the default app for .torrent files";
 
 /* Errors */
 "Action failed" = "Action failed";
@@ -192,5 +192,5 @@
 "High" = "High";
 
 /* About */
-"About Drift" = "About Drift";
+"About Swarm" = "About Swarm";
 "by Ilia Banda" = "by Ilia Banda";

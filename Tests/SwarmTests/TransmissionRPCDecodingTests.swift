@@ -1,5 +1,5 @@
 import XCTest
-@testable import Drift
+@testable import Swarm
 
 /// TransmissionClient's decoding is the most fragile seam in the app: different Transmission
 /// daemon versions and configs can omit or reorder fields. These tests pin down decoding against
@@ -31,7 +31,7 @@ final class TransmissionRPCDecodingTests: XCTestCase {
     }
 
     func testDecodingFailsWhenARequestedFieldIsMissing() {
-        // Documents the current strict-decoding behavior: if a daemon omits a field Drift asked
+        // Documents the current strict-decoding behavior: if a daemon omits a field Swarm asked
         // for, the whole torrent-get response fails to decode (surfaced to the user as a generic
         // connection error via TorrentStore.friendly(_:)) rather than partially degrading.
         let json = """

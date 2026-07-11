@@ -2,11 +2,11 @@
 import PackageDescription
 
 let package = Package(
-    name: "Drift",
+    name: "Swarm",
     platforms: [.macOS(.v14)],
-    products: [.executable(name: "Drift", targets: ["Drift"])],
+    products: [.executable(name: "Swarm", targets: ["Swarm"])],
     targets: [
-        .executableTarget(name: "Drift", path: "Sources/Drift"),
-        .testTarget(name: "DriftTests", dependencies: ["Drift"], path: "Tests/DriftTests")
+        .executableTarget(name: "Swarm", path: "Sources/Swarm"),
+        .testTarget(name: "SwarmTests", dependencies: ["Swarm"], path: "Tests/SwarmTests")
     ]
 )

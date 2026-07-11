@@ -5,7 +5,7 @@ import Security
 /// Server name/host/port/username still live in UserDefaults (ServerProfile excludes
 /// password from its Codable representation); only the password touches Keychain.
 enum KeychainHelper {
-    private static let service = "ru.iliebanda.Drift.server"
+    private static let service = "ru.iliebanda.Swarm.server"
 
     static func savePassword(_ password: String, forServerID id: UUID) {
         let account = id.uuidString

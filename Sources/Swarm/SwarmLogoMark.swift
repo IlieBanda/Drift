@@ -1,8 +1,8 @@
 import SwiftUI
 
-/// The Drift brand mark (design option 23a, final): five peer nodes linked to a
+/// The Swarm brand mark (design option 23a, final): five peer nodes linked to a
 /// coral center, bold lines filling the squircle. Scales to any square frame.
-struct DriftLogoMark: View {
+struct SwarmLogoMark: View {
     var background: Color? = Color(red: 0x3D / 255, green: 0x35 / 255, blue: 0x27 / 255)
 
     private static let nodes: [CGPoint] = {
@@ -51,8 +51,8 @@ struct DriftLogoMark: View {
 }
 
 /// The sidebar wordmark (design option 26c): a flat, backgroundless network mark
-/// paired with the "Drift" title, sized so the icon reads clearly larger than the text.
-struct DriftSidebarMark: View {
+/// paired with the "Swarm" title, sized so the icon reads clearly larger than the text.
+struct SwarmSidebarMark: View {
     private static let nodes: [CGPoint] = {
         let raw: [CGPoint] = [CGPoint(x: 100, y: 32), CGPoint(x: 158, y: 68), CGPoint(x: 138, y: 148), CGPoint(x: 62, y: 148), CGPoint(x: 42, y: 68)]
         let angle = -14 * CGFloat.pi / 180

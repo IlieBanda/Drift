@@ -135,7 +135,7 @@ struct ContentView: View {
         .inspector(isPresented: Binding(get: { store.inspectorTorrentID != nil }, set: { if !$0 { store.closeInspector() } })) {
             TorrentInspectorView(store: store)
         }
-        .alert("Drift", isPresented: Binding(get: { store.errorMessage != nil }, set: { if !$0 { store.errorMessage = nil } })) { Button("OK") {} } message: { Text(store.errorMessage ?? "") }
+        .alert("Swarm", isPresented: Binding(get: { store.errorMessage != nil }, set: { if !$0 { store.errorMessage = nil } })) { Button("OK") {} } message: { Text(store.errorMessage ?? "") }
         .confirmationDialog(pendingDelete.count > 1 ? "Remove \(pendingDelete.count) torrents?" : "Remove torrent?", isPresented: Binding(get: { !pendingDelete.isEmpty }, set: { if !$0 { pendingDelete = [] } })) {
             let targets = pendingDelete
             Button("Remove", role: .destructive) { Task { await store.delete(targets, deleteData: false) }; pendingDelete = [] }
@@ -190,7 +190,7 @@ struct Sidebar: View {
     static let freeSpaceFormatter: ByteCountFormatter = { let f = ByteCountFormatter(); f.countStyle = .file; return f }()
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            HStack(spacing: 10) { DriftSidebarMark().frame(width: 52, height: 52); Text(verbatim: "Drift").font(.system(size: 24, weight: .bold)); Spacer() }.padding(20)
+            HStack(spacing: 10) { SwarmSidebarMark().frame(width: 52, height: 52); Text(verbatim: "Swarm").font(.system(size: 24, weight: .bold)); Spacer() }.padding(20)
             Text("TRANSMISSION").font(.caption2.monospaced().bold()).foregroundStyle(.secondary).padding(.horizontal, 20).padding(.top, 8)
             ForEach(TorrentFilter.allCases) { filter in
                 Button { store.filter = filter } label: {
@@ -354,8 +354,8 @@ struct OfflineView: View {
             Image(systemName: store.isUsingDefaultLocalProfile ? "server.rack" : "bolt.horizontal.circle").font(.system(size: 52)).foregroundStyle(.secondary)
             Text(store.isUsingDefaultLocalProfile ? "Add Your Transmission Server" : "Connect to Transmission").font(.title2.bold())
             Text(store.isUsingDefaultLocalProfile
-                 ? "Drift is looking for Transmission on this Mac. If it's running elsewhere — a NAS, a home server, a seedbox — add its address to connect."
-                 : "Drift needs a Transmission RPC connection to show your downloads.")
+                 ? "Swarm is looking for Transmission on this Mac. If it's running elsewhere — a NAS, a home server, a seedbox — add its address to connect."
+                 : "Swarm needs a Transmission RPC connection to show your downloads.")
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
                 .frame(maxWidth: 360)
@@ -665,7 +665,7 @@ struct ServerEditor: View {
         VStack(alignment: .leading, spacing: 16) {
             VStack(alignment: .leading, spacing: 4) {
                 Text("Connection").font(.title2.bold())
-                Text("Connect Drift to a Transmission RPC server.").foregroundStyle(.secondary)
+                Text("Connect Swarm to a Transmission RPC server.").foregroundStyle(.secondary)
             }
             LabeledField(title: "Name", text: $name, placeholder: "Home server")
             HStack(spacing: 10) {

@@ -1,4 +1,4 @@
-# Drift 1.0 — release notes (draft)
+# Swarm 1.0 — release notes (draft)
 
 A native macOS remote for Transmission, built from scratch in SwiftUI.
 
@@ -28,7 +28,7 @@ A native macOS remote for Transmission, built from scratch in SwiftUI.
 
 - Ad-hoc signed, not notarized (no paid Apple Developer account behind this release yet).
   Gatekeeper will warn on first launch — see the README for the one-time workaround.
-- No in-app language switcher; Drift follows the system locale (English/Russian available).
+- No in-app language switcher; Swarm follows the system locale (English/Russian available).
 
 ## Requirements
 
@@ -37,5 +37,5 @@ A native macOS remote for Transmission, built from scratch in SwiftUI.
 
 ## Install
 
-Download the DMG, drag Drift into Applications, then see the README's "Installing a downloaded
+Download the DMG, drag Swarm into Applications, then see the README's "Installing a downloaded
 build" section for the Gatekeeper first-launch workaround.

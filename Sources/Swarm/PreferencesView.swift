@@ -21,18 +21,18 @@ struct GeneralTab: View {
         Form {
             Section {
                 Toggle("Launch at login", isOn: Bindable(store.appSettings).launchAtLogin)
-                Toggle("Keep Drift running after closing the window", isOn: Bindable(store.appSettings).keepRunningInBackground)
+                Toggle("Keep Swarm running after closing the window", isOn: Bindable(store.appSettings).keepRunningInBackground)
             }
             Section {
                 Toggle("Notify when a torrent finishes downloading", isOn: Bindable(store.appSettings).notifyOnComplete)
             }
             Section("Default App") {
-                Button("Make Drift the default app for magnet links") {
+                Button("Make Swarm the default app for magnet links") {
                     NSWorkspace.shared.setDefaultApplication(at: Bundle.main.bundleURL, toOpenURLsWithScheme: "magnet") { error in
                         if let error { defaultAppError = error.localizedDescription }
                     }
                 }
-                Button("Make Drift the default app for .torrent files") {
+                Button("Make Swarm the default app for .torrent files") {
                     guard let type = UTType(filenameExtension: "torrent") else { return }
                     NSWorkspace.shared.setDefaultApplication(at: Bundle.main.bundleURL, toOpen: type) { error in
                         if let error { defaultAppError = error.localizedDescription }
@@ -42,10 +42,10 @@ struct GeneralTab: View {
         }
         .formStyle(.grouped)
         .padding(.top, 8)
-        .alert("Drift", isPresented: Binding(get: { store.appSettings.launchAtLoginError != nil }, set: { if !$0 { store.appSettings.launchAtLoginError = nil } })) {
+        .alert("Swarm", isPresented: Binding(get: { store.appSettings.launchAtLoginError != nil }, set: { if !$0 { store.appSettings.launchAtLoginError = nil } })) {
             Button("OK") {}
         } message: { Text(store.appSettings.launchAtLoginError ?? "") }
-        .alert("Drift", isPresented: Binding(get: { defaultAppError != nil }, set: { if !$0 { defaultAppError = nil } })) {
+        .alert("Swarm", isPresented: Binding(get: { defaultAppError != nil }, set: { if !$0 { defaultAppError = nil } })) {
             Button("OK") {}
         } message: { Text(defaultAppError ?? "") }
     }

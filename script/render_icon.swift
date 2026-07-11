@@ -1,9 +1,9 @@
-// Renders the Drift app icon (design option 22a: final peer-network mark, network
+// Renders the Swarm app icon (design option 22a: final peer-network mark, network
 // nodes +10%, on a warm dark squircle) into an .iconset at all macOS sizes.
 // Run via script/make_icon.sh.
 import AppKit
 
-let iconsetPath = CommandLine.arguments.count > 1 ? CommandLine.arguments[1] : "Drift.iconset"
+let iconsetPath = CommandLine.arguments.count > 1 ? CommandLine.arguments[1] : "Swarm.iconset"
 
 struct Mark {
     // Geometry in the design's 200x200 viewBox, center (100,100): rotate(-14deg). The 23a SVG

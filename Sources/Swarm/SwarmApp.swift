@@ -1,7 +1,7 @@
 import SwiftUI
 import UserNotifications
 
-final class DriftAppDelegate: NSObject, NSApplicationDelegate {
+final class SwarmAppDelegate: NSObject, NSApplicationDelegate {
     var store: TorrentStore?
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
         !(store?.appSettings.keepRunningInBackground ?? false)
@@ -9,12 +9,12 @@ final class DriftAppDelegate: NSObject, NSApplicationDelegate {
 }
 
 @main
-struct DriftApp: App {
+struct SwarmApp: App {
     @State private var store = TorrentStore()
-    @NSApplicationDelegateAdaptor(DriftAppDelegate.self) private var appDelegate
+    @NSApplicationDelegateAdaptor(SwarmAppDelegate.self) private var appDelegate
 
     var body: some Scene {
-        WindowGroup("Drift") {
+        WindowGroup("Swarm") {
             ContentView(store: store)
                 .frame(minWidth: 980, minHeight: 620)
                 .task {
@@ -35,7 +35,7 @@ struct DriftApp: App {
         }
         .commands {
             CommandGroup(replacing: .appInfo) {
-                Button("About Drift") { showAboutPanel() }
+                Button("About Swarm") { showAboutPanel() }
             }
             CommandGroup(after: .newItem) {
                 Button("Add Torrent…") { store.showAddSheet = true }
@@ -75,7 +75,7 @@ struct DriftApp: App {
         )
         NSApplication.shared.orderFrontStandardAboutPanel(options: [
             .credits: credits,
-            .applicationName: "Drift",
+            .applicationName: "Swarm",
             NSApplication.AboutPanelOptionKey(rawValue: "Copyright"): "© 2026"
         ])
     }
